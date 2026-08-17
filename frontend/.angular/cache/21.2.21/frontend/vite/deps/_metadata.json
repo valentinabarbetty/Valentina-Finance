@@ -1,0 +1,73 @@
+{
+  "hash": "35ece8ec",
+  "configHash": "a570b322",
+  "lockfileHash": "663ac365",
+  "browserHash": "2bb920d2",
+  "optimized": {
+    "@angular/common/http": {
+      "src": "../../../../../../node_modules/@angular/common/fesm2022/http.mjs",
+      "file": "@angular_common_http.js",
+      "fileHash": "370698fb",
+      "needsInterop": false
+    },
+    "@angular/core": {
+      "src": "../../../../../../node_modules/@angular/core/fesm2022/core.mjs",
+      "file": "@angular_core.js",
+      "fileHash": "c9e3f613",
+      "needsInterop": false
+    },
+    "@angular/forms": {
+      "src": "../../../../../../node_modules/@angular/forms/fesm2022/forms.mjs",
+      "file": "@angular_forms.js",
+      "fileHash": "b652bdcd",
+      "needsInterop": false
+    },
+    "@angular/platform-browser": {
+      "src": "../../../../../../node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
+      "file": "@angular_platform-browser.js",
+      "fileHash": "08971156",
+      "needsInterop": false
+    },
+    "@angular/router": {
+      "src": "../../../../../../node_modules/@angular/router/fesm2022/router.mjs",
+      "file": "@angular_router.js",
+      "fileHash": "2cef6b3d",
+      "needsInterop": false
+    },
+    "@supabase/supabase-js": {
+      "src": "../../../../../../node_modules/@supabase/supabase-js/dist/index.mjs",
+      "file": "@supabase_supabase-js.js",
+      "fileHash": "3b2a64c6",
+      "needsInterop": false
+    },
+    "rxjs": {
+      "src": "../../../../../../node_modules/rxjs/dist/esm5/index.js",
+      "file": "rxjs.js",
+      "fileHash": "8b020d3c",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-OCFJUWVL": {
+      "file": "chunk-OCFJUWVL.js"
+    },
+    "chunk-YDEQTJDE": {
+      "file": "chunk-YDEQTJDE.js"
+    },
+    "chunk-GMMAEQCT": {
+      "file": "chunk-GMMAEQCT.js"
+    },
+    "chunk-FFQF3PVV": {
+      "file": "chunk-FFQF3PVV.js"
+    },
+    "chunk-IC3E4GPZ": {
+      "file": "chunk-IC3E4GPZ.js"
+    },
+    "chunk-TNPY3WSH": {
+      "file": "chunk-TNPY3WSH.js"
+    },
+    "chunk-GY2V2KO6": {
+      "file": "chunk-GY2V2KO6.js"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+import { Router } from "express";
+import { goalController } from "../controllers/goal.controller.js";
+import { authenticate } from "../middlewares/authenticate.js";
+import { asyncHandler } from "../utils/async-handler.js";
+
+export const goalsRouter = Router();
+goalsRouter.use(authenticate);
+goalsRouter.post("/", asyncHandler(goalController.create));
+goalsRouter.get("/", asyncHandler(goalController.list));
+goalsRouter.get("/:id", asyncHandler(goalController.getById));
+goalsRouter.patch("/:id", asyncHandler(goalController.update));
+goalsRouter.delete("/:id", asyncHandler(goalController.remove));
+goalsRouter.post("/:goalId/subgoals", asyncHandler(goalController.createSubgoal));
+goalsRouter.get("/:goalId/subgoals", asyncHandler(goalController.listSubgoals));
+goalsRouter.get("/:goalId/subgoals/:id", asyncHandler(goalController.getSubgoal));
+goalsRouter.patch("/:goalId/subgoals/:id", asyncHandler(goalController.updateSubgoal));
+goalsRouter.delete("/:goalId/subgoals/:id", asyncHandler(goalController.removeSubgoal));
+goalsRouter.post("/:goalId/contributions", asyncHandler(goalController.createContribution));
+goalsRouter.get("/:goalId/contributions", asyncHandler(goalController.listContributions));
+goalsRouter.get("/:goalId/contributions/:id", asyncHandler(goalController.getContribution));
+goalsRouter.patch("/:goalId/contributions/:id", asyncHandler(goalController.updateContribution));
+goalsRouter.delete("/:goalId/contributions/:id", asyncHandler(goalController.removeContribution));

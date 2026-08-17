@@ -1,0 +1,13 @@
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# Node / TypeScript artifacts
+**/node_modules/
+**/dist/
+*.tsbuildinfo
+
+# Logs and system files
+npm-debug.log*
+.DS_Store

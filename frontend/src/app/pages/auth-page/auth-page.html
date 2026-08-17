@@ -1,0 +1,36 @@
+<main class="auth-page">
+  <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()">
+    <p class="eyebrow">Valen Finance</p>
+    <h1>{{ isRegister() ? 'Crear cuenta' : 'Iniciar sesión' }}</h1>
+    <p class="subtitle">{{ isRegister() ? 'Usa tu correo para empezar.' : 'Accede a tu cuenta de forma segura.' }}</p>
+
+    <label>
+      Correo electrónico
+      <input type="email" autocomplete="email" formControlName="email" />
+    </label>
+    @if (form.controls.email.touched && form.controls.email.invalid) {
+      <p class="field-error">Ingresa un correo válido.</p>
+    }
+
+    <label>
+      Contraseña
+      <input type="password" autocomplete="current-password" formControlName="password" />
+    </label>
+    @if (form.controls.password.touched && form.controls.password.invalid) {
+      <p class="field-error">La contraseña debe tener al menos 8 caracteres.</p>
+    }
+
+    @if (error()) { <p class="notice error">{{ error() }}</p> }
+    @if (message()) { <p class="notice success">{{ message() }}</p> }
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Procesando…' : (isRegister() ? 'Crear cuenta' : 'Entrar') }}
+    </button>
+
+    @if (isRegister()) {
+      <p class="switch">¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a></p>
+    } @else {
+      <p class="switch">¿Aún no tienes cuenta? <a routerLink="/register">Crea tu cuenta</a></p>
+    }
+  </form>
+</main>

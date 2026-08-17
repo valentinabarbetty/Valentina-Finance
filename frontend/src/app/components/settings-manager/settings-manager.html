@@ -1,0 +1,40 @@
+<section class="manager">
+  <header class="manager__header">
+    <div><p class="eyebrow">Valen Finance</p><h1>{{ title() }}</h1><p>Organiza tus opciones personales a tu manera.</p></div>
+    <button type="button" class="primary" (click)="openCreate()">+ Nueva {{ singular() }}</button>
+  </header>
+
+  @if (error()) { <p class="notice error">{{ error() }}</p> }
+  @if (success()) { <p class="notice success">{{ success() }}</p> }
+
+  @if (formVisible()) {
+    <form class="editor" [formGroup]="form" (ngSubmit)="save()">
+      <h2>{{ editingId() ? 'Editar' : 'Crear' }} {{ singular() }}</h2>
+      <label>Nombre <input formControlName="name" maxlength="100" /></label>
+      @if (form.controls.name.touched && form.controls.name.invalid) { <p class="field-error">El nombre es obligatorio.</p> }
+      <label>Descripción <textarea formControlName="description" maxlength="500"></textarea></label>
+      <div class="two-columns">
+        <label>Icono <input formControlName="icon" placeholder="Ej. ✨" maxlength="100" /></label>
+        <label>Color <input formControlName="color" placeholder="Ej. #F9A8D4" maxlength="32" /></label>
+      </div>
+      <label>{{ isTransactionType() ? 'Tipo' : 'Aplica a' }}
+        <select formControlName="kind">
+          @if (!isTransactionType()) { <option value="GENERAL">General</option> }
+          <option value="EXPENSE">Gasto</option><option value="INCOME">Ingreso</option>
+        </select>
+      </label>
+      <div class="actions"><button type="button" class="secondary" (click)="cancel()">Cancelar</button><button type="submit" class="primary" [disabled]="saving()">{{ saving() ? 'Guardando…' : 'Guardar' }}</button></div>
+    </form>
+  }
+
+  @if (loading()) { <p class="state">Cargando…</p> }
+  @else if (!records().length) {
+    <div class="empty"><p>Todavía no tienes {{ isTransactionType() ? 'tipos de transacción' : 'categorías' }} 💗</p><button type="button" class="primary" (click)="openCreate()">+ Crear {{ singular() }}</button></div>
+  } @else {
+    <div class="records">
+      @for (record of records(); track record.id) {
+        <article class="record"><span class="record__swatch" [style.background]="record.color || '#f9a8d4'">{{ record.icon || '✦' }}</span><div><h2>{{ record.name }}</h2><p>{{ record.description || 'Sin descripción' }}</p><small>{{ record.kind === 'EXPENSE' ? 'Gasto' : record.kind === 'INCOME' ? 'Ingreso' : 'General' }}</small></div><div class="record__actions"><button type="button" (click)="openEdit(record)">Editar</button><button type="button" class="danger" (click)="remove(record)">Eliminar</button></div></article>
+      }
+    </div>
+  }
+</section>

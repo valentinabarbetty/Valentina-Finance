@@ -1,0 +1,391 @@
+// =============================================================================
+// Valen Finance — Prisma Schema (PostgreSQL / Supabase)
+// =============================================================================
+// Decisiones de diseño clave (ver esquema-diseno-notas.md para el detalle):
+//
+// 1. Autenticación vía Supabase Auth. `User.id` es el MISMO uuid que
+//    `auth.users.id` en Supabase — no guardamos password aquí.
+// 2. "Tipos" de gasto/ingreso (necesidad, deseo, salario, bono, etc.) son
+//    completamente dinámicos → tabla `TransactionType`, NO un enum. El spec
+//    exige explícitamente que estos tipos sean extensibles por la usuaria.
+// 3. `currentAmount` de metas y `pendingAmount` de deudas NO se persisten.
+//    Se calculan siempre a partir de `GoalContribution` / `DebtPayment`
+//    (regla explícita de la sección 11 y 41 del spec: nunca almacenar un
+//    porcentaje o total fijo).
+// 4. Soft delete (`deletedAt`) en toda tabla financiera (sección 26 del spec).
+// 5. `userId` está denormalizado en tablas hijas (Subgoal, GoalContribution,
+//    DebtPayment) aunque ya se pueda derivar via join — esto es intencional:
+//    simplifica las políticas de Row Level Security de Supabase y refuerza
+//    el aislamiento entre usuarias exigido en la sección 52 del spec.
+// 6. Estados con conjunto cerrado y estable (GoalStatus, DebtStatus,
+//    Priority, DebtDirection, Frequency) sí son enums de Postgres — no
+//    necesitan administrarse desde la UI, a diferencia de las categorías
+//    y los tipos de transacción.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------------
+// Enums (conjuntos cerrados y estables — no requieren administración desde UI)
+// -----------------------------------------------------------------------------
+
+enum TransactionKind {
+  INCOME
+  EXPENSE
+}
+
+enum CategoryKind {
+  INCOME
+  EXPENSE
+  GENERAL // aplica a ambos, o se usa solo para clasificar metas
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+}
+
+enum DebtDirection {
+  I_OWE // yo debo
+  OWED_TO_ME // me deben
+}
+
+enum DebtStatus {
+  ACTIVE
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum RecurrenceFrequency {
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+// -----------------------------------------------------------------------------
+// User
+// -----------------------------------------------------------------------------
+
+model User {
+  id                  String   @id @db.Uuid // == auth.users.id en Supabase
+  email               String   @unique
+  name                String
+  currency            String   @default("COP") // ISO 4217; preparado para multi-moneda futura
+  monthlyIncomeApprox Decimal? @db.Decimal(14, 2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  deletedAt           DateTime?
+
+  categories         Category[]
+  transactionTypes   TransactionType[]
+  goals              Goal[]
+  subgoals           Subgoal[]
+  goalContributions  GoalContribution[]
+  expenses           Expense[]
+  incomes            Income[]
+  budgets            Budget[]
+  recurringExpenses  RecurringExpense[]
+  debts              Debt[]
+  debtPayments       DebtPayment[]
+
+  @@map("users")
+}
+
+// -----------------------------------------------------------------------------
+// TransactionType — reemplaza enums hardcodeados de tipo de gasto/ingreso
+// (necesidad, deseo, gasto recurrente, otro / salario, bono, devolución...)
+// Totalmente administrable por la usuaria (secciones 7 y 8 del spec).
+// -----------------------------------------------------------------------------
+
+model TransactionType {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      TransactionKind
+  name      String // "Necesidad", "Deseo", "Salario", "Bonificación"...
+  description String?
+  icon      String?
+  color     String?
+  isActive  Boolean          @default(true)
+  isSystem  Boolean          @default(false) // true = venía del set inicial sugerido; sigue siendo editable
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+
+  expenses Expense[]
+  incomes  Income[]
+
+  @@unique([userId, kind, name])
+  @@index([userId])
+  @@map("transaction_types")
+}
+
+// -----------------------------------------------------------------------------
+// Category
+// -----------------------------------------------------------------------------
+
+model Category {
+  id          String       @id @default(uuid()) @db.Uuid
+  userId      String       @db.Uuid
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  kind        CategoryKind @default(GENERAL)
+  icon        String?
+  color       String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  goals             Goal[]
+  expenses          Expense[]
+  incomes           Income[]
+  budgets           Budget[]
+  recurringExpenses RecurringExpense[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("categories")
+}
+
+// -----------------------------------------------------------------------------
+// Goal + Subgoal + GoalContribution
+// -----------------------------------------------------------------------------
+
+model Goal {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String     @db.Uuid
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String?    @db.Uuid
+  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  name        String
+  description String?
+  targetAmount Decimal   @db.Decimal(14, 2)
+  // currentAmount NO se persiste: se calcula como
+  //   SUM(goalContributions.amount WHERE goalId = this.id)
+  // (incluye aportes hechos directo a la meta y, vía join, a sus sub-metas)
+  startDate   DateTime?  @db.Date
+  targetDate  DateTime?  @db.Date
+  priority    Priority   @default(MEDIUM)
+  status      GoalStatus @default(ACTIVE)
+  icon        String?
+  color       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  subgoals      Subgoal[]
+  contributions GoalContribution[]
+  budgets       Budget[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@map("goals")
+}
+
+model Subgoal {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid // denormalizado — ver nota de diseño #5
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId       String    @db.Uuid
+  goal         Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  name         String
+  targetAmount Decimal   @db.Decimal(14, 2)
+  priority     Priority  @default(MEDIUM)
+  referenceUrl String? // hallazgo del Excel: casi toda sub-meta tiene un link de producto asociado
+  icon         String?
+  color        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  contributions GoalContribution[]
+
+  @@index([userId])
+  @@index([goalId])
+  @@map("subgoals")
+}
+
+model GoalContribution {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid // denormalizado — ver nota de diseño #5
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId      String    @db.Uuid
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  subgoalId   String?   @db.Uuid // null = aporte a la meta general, no a una sub-meta específica
+  subgoal     Subgoal?  @relation(fields: [subgoalId], references: [id], onDelete: Cascade)
+  amount      Decimal   @db.Decimal(14, 2)
+  date        DateTime  @db.Date
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([userId])
+  @@index([goalId, date])
+  @@index([subgoalId])
+  @@map("goal_contributions")
+}
+
+// -----------------------------------------------------------------------------
+// Expense / Income
+// -----------------------------------------------------------------------------
+
+model Expense {
+  id                  String           @id @default(uuid()) @db.Uuid
+  userId              String           @db.Uuid
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId          String           @db.Uuid
+  category            Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  typeId              String?          @db.Uuid // TransactionType con kind=EXPENSE
+  type                TransactionType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  amount              Decimal          @db.Decimal(14, 2)
+  description         String?
+  date                DateTime         @db.Date
+  notes               String?
+  recurringExpenseId  String?          @db.Uuid // referencia al gasto recurrente que lo generó, evita duplicados
+  recurringExpense    RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  deletedAt           DateTime?
+
+  @@index([userId, date])
+  @@index([categoryId])
+  @@map("expenses")
+}
+
+model Income {
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @db.Uuid
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String?          @db.Uuid
+  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  typeId      String?          @db.Uuid // TransactionType con kind=INCOME
+  type        TransactionType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  amount      Decimal          @db.Decimal(14, 2)
+  description String?
+  date        DateTime         @db.Date
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+
+  @@index([userId, date])
+  @@map("incomes")
+}
+
+// -----------------------------------------------------------------------------
+// Budget — presupuesto por mes/año, por categoría y/o por meta (sección 15-16)
+// -----------------------------------------------------------------------------
+
+model Budget {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?   @db.Uuid
+  category      Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  goalId        String?   @db.Uuid
+  goal          Goal?     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  month         Int // 1-12
+  year          Int
+  plannedAmount Decimal   @db.Decimal(14, 2)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  // NOTA: Postgres no aplica unicidad entre filas con NULL en columnas nullable
+  // (categoryId/goalId), así que este @@unique no evita duplicados cuando
+  // ambos son NULL. Ver esquema-diseno-notas.md para el índice parcial
+  // recomendado a nivel de migración SQL.
+  @@unique([userId, categoryId, goalId, month, year])
+  @@index([userId, year, month])
+  @@map("budgets")
+}
+
+// -----------------------------------------------------------------------------
+// RecurringExpense (sección 17)
+// -----------------------------------------------------------------------------
+
+model RecurringExpense {
+  id                 String              @id @default(uuid()) @db.Uuid
+  userId             String              @db.Uuid
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId         String              @db.Uuid
+  category           Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  name               String
+  amount             Decimal             @db.Decimal(14, 2)
+  frequency          RecurrenceFrequency @default(MONTHLY)
+  startDate          DateTime            @db.Date
+  nextOccurrenceDate DateTime            @db.Date // usado para saber cuándo generar/sugerir el próximo gasto
+  lastGeneratedDate  DateTime?           @db.Date // guarda evitar duplicados en el mismo período
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt           DateTime?
+
+  generatedExpenses Expense[]
+
+  @@index([userId])
+  @@index([isActive, nextOccurrenceDate])
+  @@map("recurring_expenses")
+}
+
+// -----------------------------------------------------------------------------
+// Debt + DebtPayment (sección 18)
+// -----------------------------------------------------------------------------
+
+model Debt {
+  id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @db.Uuid
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  direction      DebtDirection @default(I_OWE) // hallazgo del Excel: "Deben" mezcla ambos casos
+  originalAmount Decimal       @db.Decimal(14, 2)
+  // pendingAmount NO se persiste: se calcula como
+  //   originalAmount - SUM(debtPayments.amount WHERE debtId = this.id)
+  dueDate        DateTime?     @db.Date
+  description    String?
+  status         DebtStatus    @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  payments DebtPayment[]
+
+  @@index([userId, status])
+  @@map("debts")
+}
+
+model DebtPayment {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid // denormalizado — ver nota de diseño #5
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  debtId      String    @db.Uuid
+  debt        Debt      @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  amount      Decimal   @db.Decimal(14, 2)
+  date        DateTime  @db.Date
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([userId])
+  @@index([debtId, date])
+  @@map("debt_payments")
+}

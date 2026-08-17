@@ -1,0 +1,28 @@
+<main>
+  <section>
+    <p class="eyebrow">Sesión autenticada</p>
+    <h1>Bienvenida{{ user()?.email ? ', ' + user()?.email : '' }}</h1>
+    <p>Esta pantalla solo verifica la autenticación. No contiene datos financieros.</p>
+
+    @if (apiUser()) {
+      <div class="verified">
+        <strong>Backend verificado</strong>
+        <span>{{ apiUser()?.id }}</span>
+      </div>
+    } @else if (apiError()) {
+      <p class="error">{{ apiError() }}</p>
+    } @else {
+      <p>Verificando token con el backend…</p>
+    }
+
+    <nav aria-label="Configuración financiera">
+      <a routerLink="/app/expenses">Registrar gastos</a>
+      <a routerLink="/app/incomes">Registrar ingresos</a>
+      <a routerLink="/app/goals">Administrar metas</a>
+      <a routerLink="/app/categories">Administrar categorías</a>
+      <a routerLink="/app/transaction-types">Administrar tipos de transacción</a>
+    </nav>
+
+    <button type="button" (click)="logout()">Cerrar sesión</button>
+  </section>
+</main>

@@ -1,0 +1,10 @@
+import { z } from "zod";
+const money = z.string().regex(/^\d+(\.\d{1,2})?$/).refine(v => !/^0(?:\.0{1,2})?$/.test(v), "Amount must be positive");
+const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => new Date(`${v}T00:00:00.000Z`).toISOString().slice(0,10) === v, "Invalid date");
+const text = z.string().trim().min(1).max(500).nullable().optional();
+export const goalCreateSchema = z.object({ name:z.string().trim().min(1).max(100), description:text, targetAmount:money, startDate:date.nullable().optional(), targetDate:date.nullable().optional(), priority:z.enum(["LOW","MEDIUM","HIGH"]).optional(), status:z.enum(["ACTIVE","COMPLETED","PAUSED","CANCELLED"]).optional(), categoryId:z.string().uuid().nullable().optional(), icon:z.string().trim().min(1).max(100).nullable().optional(), color:z.string().trim().min(1).max(32).nullable().optional() }).strict();
+export const goalUpdateSchema = goalCreateSchema.partial().refine(v => Object.keys(v).length > 0);
+export const subgoalCreateSchema = z.object({ name:z.string().trim().min(1).max(100), targetAmount:money, priority:z.enum(["LOW","MEDIUM","HIGH"]).optional(), referenceUrl:z.string().url().nullable().optional(), icon:z.string().trim().min(1).max(100).nullable().optional(), color:z.string().trim().min(1).max(32).nullable().optional() }).strict();
+export const subgoalUpdateSchema = subgoalCreateSchema.partial().refine(v => Object.keys(v).length > 0);
+export const contributionCreateSchema = z.object({ amount:money, date, description:text, subgoalId:z.string().uuid().nullable().optional() }).strict();
+export const contributionUpdateSchema = contributionCreateSchema.partial().refine(v => Object.keys(v).length > 0);
