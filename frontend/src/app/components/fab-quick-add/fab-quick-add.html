@@ -1,0 +1,47 @@
+@if (open()) {
+  <div class="fab-backdrop" (click)="close()"></div>
+}
+
+<div class="fab-wrap">
+  @if (open()) {
+    <div class="fab-menu">
+      <a routerLink="/app/expenses" (click)="close()">
+        <span class="fab-menu-icon expense">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+        </span>
+        Registrar gasto
+      </a>
+      <a routerLink="/app/incomes" (click)="close()">
+        <span class="fab-menu-icon income">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+        </span>
+        Registrar ingreso
+      </a>
+      <a routerLink="/app/goals" (click)="close()">
+        <span class="fab-menu-icon goal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /></svg>
+        </span>
+        Aportar a una meta
+      </a>
+      <a routerLink="/app/goals" (click)="close()">
+        <span class="fab-menu-icon new-goal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
+        </span>
+        Nueva meta
+      </a>
+    </div>
+  }
+
+  <button
+    type="button"
+    class="fab"
+    [class.is-open]="open()"
+    (click)="toggle()"
+    [attr.aria-expanded]="open()"
+    aria-label="Registrar movimiento"
+  >
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  </button>
+</div>

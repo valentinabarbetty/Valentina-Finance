@@ -20,6 +20,7 @@ export class AuthPage {
   readonly loading = signal(false);
   readonly message = signal<string | null>(null);
   readonly error = signal<string | null>(null);
+  readonly showPassword = signal(false);
   readonly form = this.formBuilder.nonNullable.group({
     email: ["", [Validators.required, Validators.email]],
     password: ["", [Validators.required, Validators.minLength(8)]],

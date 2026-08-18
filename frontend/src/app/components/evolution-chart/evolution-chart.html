@@ -1,0 +1,40 @@
+@if (hasMovement()) {
+  <div class="chart-bars" aria-hidden="true">
+    @for (bar of bars(); track bar.label + $index) {
+      <div class="chart-column">
+        <div class="chart-bar-pair">
+          <span class="chart-bar income" [style.height.px]="bar.incomeHeight"></span>
+          <span class="chart-bar expense" [style.height.px]="bar.expenseHeight"></span>
+        </div>
+        <span class="chart-month">{{ bar.label }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="chart-legend" aria-hidden="true">
+    <span class="legend-item"><i class="dot income"></i> Ingresos</span>
+    <span class="legend-item"><i class="dot expense"></i> Gastos</span>
+  </div>
+
+  <table class="visually-hidden">
+    <caption>Evolución de ingresos y gastos por mes</caption>
+    <thead>
+      <tr>
+        <th scope="col">Mes</th>
+        <th scope="col">Ingresos</th>
+        <th scope="col">Gastos</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (bar of bars(); track bar.label + $index) {
+        <tr>
+          <th scope="row">{{ bar.label }}</th>
+          <td>{{ bar.incomeAmount }}</td>
+          <td>{{ bar.expenseAmount }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+} @else {
+  <p class="chart-empty">Todavía no hay suficientes datos para mostrar tu evolución.</p>
+}

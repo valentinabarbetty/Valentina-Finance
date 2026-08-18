@@ -1,0 +1,24 @@
+@if (visible().length) {
+  <ul class="category-list">
+    @for (item of visible(); track item.category?.id ?? item.category?.name) {
+      <li class="category-row">
+        <span class="category-icon" aria-hidden="true">{{ item.category?.icon || "🏷️" }}</span>
+        <div class="category-info">
+          <div class="category-info-head">
+            <span class="category-name">{{ item.category?.name || "Categoría eliminada" }}</span>
+            <span class="category-percentage">{{ item.percentage }}%</span>
+          </div>
+          <div class="category-track">
+            <div class="category-fill" [style.width.%]="item.percentage"></div>
+          </div>
+        </div>
+        <strong class="category-amount">{{ item.amount | money }}</strong>
+      </li>
+    }
+  </ul>
+  @if (hasMore()) {
+    <a class="see-all" routerLink="/app/expenses">Ver todas las categorías</a>
+  }
+} @else {
+  <p class="category-empty">Todavía no tienes gastos este mes 🌸</p>
+}

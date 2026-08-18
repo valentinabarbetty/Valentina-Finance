@@ -16,10 +16,16 @@ import {
   Subgoal,
   SubgoalPayload,
 } from '../../services/goal.service';
+import { BottomNavComponent } from '../../components/bottom-nav/bottom-nav';
+
+interface Toast {
+  message: string;
+  type: 'success' | 'error';
+}
 
 @Component({
   selector: 'app-goals-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, BottomNavComponent],
   templateUrl: './goals-page.html',
   styleUrl: './goals-page.scss',
 })
@@ -29,9 +35,10 @@ export class GoalsPage implements OnInit {
 
   readonly goals = signal<Goal[]>([]);
   readonly selected = signal<Goal | null>(null);
-  readonly error = signal<string | null>(null);
-  readonly message = signal<string | null>(null);
   readonly loading = signal(true);
+
+  readonly toast = signal<Toast | null>(null);
+  private toastTimer?: ReturnType<typeof setTimeout>;
 
   readonly goalEditor = signal(false);
   readonly subgoalEditor = signal(false);
@@ -190,11 +197,7 @@ export class GoalsPage implements OnInit {
     request.subscribe({
       next: (goal) => {
         this.goalEditor.set(false);
-
-        this.message.set(
-          id ? 'Meta actualizada.' : 'Meta creada.',
-        );
-
+        this.showToast(id ? 'Meta actualizada.' : 'Meta creada.', 'success');
         this.load(goal.id);
       },
       error: (error) => this.fail(error),
@@ -213,7 +216,7 @@ export class GoalsPage implements OnInit {
     this.api.remove(goal.id).subscribe({
       next: () => {
         this.selected.set(null);
-        this.message.set('Meta eliminada.');
+        this.showToast('Meta eliminada.', 'success');
         this.load();
       },
       error: (error) => this.fail(error),
@@ -261,7 +264,7 @@ export class GoalsPage implements OnInit {
     request.subscribe({
       next: () => {
         this.subgoalEditor.set(false);
-        this.message.set('Submeta guardada.');
+        this.showToast('Submeta guardada.', 'success');
         this.refresh(goal.id);
       },
       error: (error) => this.fail(error),
@@ -284,7 +287,7 @@ export class GoalsPage implements OnInit {
       .removeSubgoal(goal.id, subgoal.id)
       .subscribe({
         next: () => {
-          this.message.set('Submeta eliminada.');
+          this.showToast('Submeta eliminada.', 'success');
           this.refresh(goal.id);
         },
         error: (error) => this.fail(error),
@@ -349,7 +352,7 @@ export class GoalsPage implements OnInit {
     request.subscribe({
       next: () => {
         this.contributionEditor.set(false);
-        this.message.set('Aporte guardado.');
+        this.showToast('Aporte guardado.', 'success');
         this.refresh(goal.id);
       },
       error: (error) => this.fail(error),
@@ -377,10 +380,7 @@ export class GoalsPage implements OnInit {
       )
       .subscribe({
         next: () => {
-          this.message.set(
-            'Aporte eliminado.',
-          );
-
+          this.showToast('Aporte eliminado.', 'success');
           this.refresh(goal.id);
         },
         error: (error) => this.fail(error),
@@ -450,6 +450,12 @@ export class GoalsPage implements OnInit {
     )[priority] ?? priority;
   }
 
+  private showToast(message: string, type: 'success' | 'error'): void {
+    clearTimeout(this.toastTimer);
+    this.toast.set({ message, type });
+    this.toastTimer = setTimeout(() => this.toast.set(null), 3200);
+  }
+
   private text(
     value: string,
   ): string | null {
@@ -463,9 +469,10 @@ export class GoalsPage implements OnInit {
       };
     },
   ): void {
-    this.error.set(
+    this.showToast(
       error.error?.error ??
         'No fue posible completar la operación.',
+      'error',
     );
   }
 }

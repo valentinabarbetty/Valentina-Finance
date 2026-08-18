@@ -1,0 +1,128 @@
+.fab-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(52, 38, 43, 0.28);
+  z-index: 45;
+  animation: fade-in var(--duration-fast) var(--ease-out) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fab-wrap {
+  position: fixed;
+  right: 1.25rem;
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  z-index: 50;
+  display: grid;
+  justify-items: end;
+  gap: 0.6rem;
+}
+
+.fab {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
+  box-shadow: 0 16px 32px -14px rgba(168, 87, 99, 0.55);
+  cursor: pointer;
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.fab:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.fab.is-open {
+  transform: rotate(45deg);
+}
+
+.fab-menu {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.fab-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.9rem 0.55rem 0.55rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  animation: pop-in var(--duration-base) var(--ease-out) both;
+}
+
+.fab-menu a:nth-child(1) {
+  animation-delay: 0ms;
+}
+.fab-menu a:nth-child(2) {
+  animation-delay: 40ms;
+}
+.fab-menu a:nth-child(3) {
+  animation-delay: 80ms;
+}
+.fab-menu a:nth-child(4) {
+  animation-delay: 120ms;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fab-menu-icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  color: #fff;
+}
+
+.fab-menu-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.fab-menu-icon.expense {
+  background: var(--color-error);
+}
+.fab-menu-icon.income {
+  background: var(--color-success);
+}
+.fab-menu-icon.goal,
+.fab-menu-icon.new-goal {
+  background: var(--color-accent);
+}
+
+@media (min-width: 1024px) {
+  .fab-wrap {
+    bottom: 2rem;
+  }
+}

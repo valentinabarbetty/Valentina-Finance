@@ -1,0 +1,24 @@
+@if (movements.length) {
+  <ul class="movements-list">
+    @for (movement of movements; track movement.id) {
+      <li class="movement-row">
+        <span class="movement-icon" [class.income]="movement.kind === 'INCOME'" [class.expense]="movement.kind === 'EXPENSE'" aria-hidden="true">
+          {{ movement.category?.icon || (movement.kind === "INCOME" ? "💰" : "💸") }}
+        </span>
+        <div class="movement-body">
+          <p class="movement-name">{{ movement.description || movement.category?.name || "Sin descripción" }}</p>
+          <p class="movement-sub">{{ movement.category?.name || "Sin categoría" }} · {{ formatDate(movement.date) }}</p>
+        </div>
+        <strong class="movement-amount" [class.income]="movement.kind === 'INCOME'" [class.expense]="movement.kind === 'EXPENSE'">
+          {{ movement.kind === "INCOME" ? "+" : "-" }} {{ movement.amount | money }}
+        </strong>
+      </li>
+    }
+  </ul>
+  <div class="movement-links">
+    <a routerLink="/app/expenses">Ver gastos</a>
+    <a routerLink="/app/incomes">Ver ingresos</a>
+  </div>
+} @else {
+  <p class="movements-empty">Todavía no tienes movimientos este mes.</p>
+}

@@ -1,0 +1,14 @@
+<article class="goal-card" [style.--goal-color]="goal.color || 'var(--color-accent)'">
+  <div class="goal-icon">{{ goal.icon || '🎯' }}</div>
+  <p class="goal-name">{{ goal.name }}</p>
+  <p class="goal-amount">{{ goal.currentAmount | money }} <span>de {{ goal.targetAmount | money }}</span></p>
+  <div class="progress-track">
+    <div class="progress-fill" [style.width.%]="goal.percentage"></div>
+  </div>
+  <div class="goal-footer">
+    <span class="goal-percentage">{{ goal.percentage }}%</span>
+    @if (goal.targetDate) {
+      <span class="goal-date">{{ goal.targetDate }}</span>
+    }
+  </div>
+</article>

@@ -1,0 +1,16 @@
+<section class="summary-grid" aria-label="Resumen financiero del mes">
+  @for (card of cards(); track card.label) {
+    <article class="summary-card" [class]="'tone-' + card.tone">
+      <div class="summary-card-head">
+        <span class="summary-icon" aria-hidden="true">{{ card.icon }}</span>
+        <span class="summary-label">{{ card.label }}</span>
+      </div>
+      <p class="summary-value">{{ card.isMoney ? (card.value | money) : card.value }}</p>
+      @if (card.delta) {
+        <p class="summary-delta" [class.up]="card.delta.direction === 'up'" [class.down]="card.delta.direction === 'down'">
+          {{ card.delta.label }}
+        </p>
+      }
+    </article>
+  }
+</section>

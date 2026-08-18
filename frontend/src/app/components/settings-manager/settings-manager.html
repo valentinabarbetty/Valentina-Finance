@@ -1,40 +1,104 @@
-<section class="manager">
-  <header class="manager__header">
-    <div><p class="eyebrow">Valen Finance</p><h1>{{ title() }}</h1><p>Organiza tus opciones personales a tu manera.</p></div>
-    <button type="button" class="primary" (click)="openCreate()">+ Nueva {{ singular() }}</button>
-  </header>
+<div class="page-shell">
+  <app-bottom-nav />
 
-  @if (error()) { <p class="notice error">{{ error() }}</p> }
-  @if (success()) { <p class="notice success">{{ success() }}</p> }
-
-  @if (formVisible()) {
-    <form class="editor" [formGroup]="form" (ngSubmit)="save()">
-      <h2>{{ editingId() ? 'Editar' : 'Crear' }} {{ singular() }}</h2>
-      <label>Nombre <input formControlName="name" maxlength="100" /></label>
-      @if (form.controls.name.touched && form.controls.name.invalid) { <p class="field-error">El nombre es obligatorio.</p> }
-      <label>Descripción <textarea formControlName="description" maxlength="500"></textarea></label>
-      <div class="two-columns">
-        <label>Icono <input formControlName="icon" placeholder="Ej. ✨" maxlength="100" /></label>
-        <label>Color <input formControlName="color" placeholder="Ej. #F9A8D4" maxlength="32" /></label>
+  <main class="manager">
+    <header class="manager-header">
+      <div>
+        <p class="eyebrow">Valen Finance</p>
+        <h1>{{ title() }}</h1>
+        <p class="subtitle">Organiza tus opciones personales a tu manera.</p>
       </div>
-      <label>{{ isTransactionType() ? 'Tipo' : 'Aplica a' }}
-        <select formControlName="kind">
-          @if (!isTransactionType()) { <option value="GENERAL">General</option> }
-          <option value="EXPENSE">Gasto</option><option value="INCOME">Ingreso</option>
-        </select>
-      </label>
-      <div class="actions"><button type="button" class="secondary" (click)="cancel()">Cancelar</button><button type="submit" class="primary" [disabled]="saving()">{{ saving() ? 'Guardando…' : 'Guardar' }}</button></div>
-    </form>
-  }
+      <button type="button" class="btn-primary" (click)="openCreate()">+ Nueva {{ singular() }}</button>
+    </header>
 
-  @if (loading()) { <p class="state">Cargando…</p> }
-  @else if (!records().length) {
-    <div class="empty"><p>Todavía no tienes {{ isTransactionType() ? 'tipos de transacción' : 'categorías' }} 💗</p><button type="button" class="primary" (click)="openCreate()">+ Crear {{ singular() }}</button></div>
-  } @else {
-    <div class="records">
-      @for (record of records(); track record.id) {
-        <article class="record"><span class="record__swatch" [style.background]="record.color || '#f9a8d4'">{{ record.icon || '✦' }}</span><div><h2>{{ record.name }}</h2><p>{{ record.description || 'Sin descripción' }}</p><small>{{ record.kind === 'EXPENSE' ? 'Gasto' : record.kind === 'INCOME' ? 'Ingreso' : 'General' }}</small></div><div class="record__actions"><button type="button" (click)="openEdit(record)">Editar</button><button type="button" class="danger" (click)="remove(record)">Eliminar</button></div></article>
-      }
-    </div>
-  }
-</section>
+    @if (formVisible()) {
+      <div class="editor-backdrop" (click)="cancel()"></div>
+      <form class="editor-card" [formGroup]="form" (ngSubmit)="save()">
+        <h2>{{ editingId() ? "Editar" : "Crear" }} {{ singular() }}</h2>
+
+        @if (formError()) { <p class="form-error">{{ formError() }}</p> }
+
+        <label>
+          Nombre
+          <input formControlName="name" maxlength="100" />
+        </label>
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <p class="field-error">El nombre es obligatorio.</p>
+        }
+
+        <label>
+          Descripción
+          <textarea formControlName="description" maxlength="500"></textarea>
+        </label>
+
+        <div class="two-columns">
+          <label>
+            Icono
+            <input formControlName="icon" placeholder="Ej. ✨" maxlength="100" />
+          </label>
+          <label>
+            Color
+            <input formControlName="color" placeholder="Ej. #F9A8D4" maxlength="32" />
+          </label>
+        </div>
+
+        <label>
+          {{ isTransactionType() ? "Tipo" : "Aplica a" }}
+          <select formControlName="kind">
+            @if (!isTransactionType()) { <option value="GENERAL">General</option> }
+            <option value="EXPENSE">Gasto</option>
+            <option value="INCOME">Ingreso</option>
+          </select>
+        </label>
+
+        <div class="editor-actions">
+          <button type="button" class="btn-ghost" (click)="cancel()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="saving()">{{ saving() ? "Guardando…" : "Guardar" }}</button>
+        </div>
+      </form>
+    }
+
+    @if (loading()) {
+      <p class="state-text">Cargando…</p>
+    } @else if (!records().length) {
+      <div class="empty-state">
+        <p>Todavía no tienes {{ isTransactionType() ? "tipos de transacción" : "categorías" }} 💗</p>
+        <button type="button" class="btn-secondary" (click)="openCreate()">+ Crear {{ singular() }}</button>
+      </div>
+    } @else {
+      <div class="records-list">
+        @for (record of records(); track record.id) {
+          <article class="record-row">
+            <span class="record-swatch" [style.background]="record.color || 'var(--color-accent-soft)'">{{ record.icon || "✦" }}</span>
+            <div class="record-body">
+              <p class="record-name">{{ record.name }}</p>
+              <p class="record-sub">{{ record.description || "Sin descripción" }}</p>
+            </div>
+            <div class="record-right">
+              <span class="record-kind">{{ record.kind === "EXPENSE" ? "Gasto" : record.kind === "INCOME" ? "Ingreso" : "General" }}</span>
+              <div class="record-actions">
+                <button type="button" (click)="openEdit(record)" aria-label="Editar">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                </button>
+                <button type="button" class="danger" (click)="remove(record)" aria-label="Eliminar">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </main>
+</div>
+
+@if (toast(); as t) {
+  <div class="toast" [class.error]="t.type === 'error'">
+    @if (t.type === 'success') {
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5" /></svg>
+    } @else {
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>
+    }
+    <span>{{ t.message }}</span>
+  </div>
+}

@@ -1,0 +1,80 @@
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.summary-card {
+  padding: 1rem 1.05rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+
+.summary-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.summary-icon {
+  font-size: 1rem;
+}
+
+.summary-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.summary-value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.15;
+}
+
+.summary-card.tone-income .summary-value {
+  color: var(--color-success);
+}
+
+.summary-card.tone-expense .summary-value {
+  color: var(--color-error);
+}
+
+.summary-card.tone-savings .summary-value {
+  color: var(--color-accent-strong);
+}
+
+.summary-delta {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.summary-delta.up {
+  color: var(--color-success);
+}
+
+.summary-delta.down {
+  color: var(--color-error);
+}
+
+@media (min-width: 640px) {
+  .summary-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .summary-value {
+    font-size: 1.6rem;
+  }
+}
