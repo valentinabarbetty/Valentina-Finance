@@ -5,12 +5,10 @@
     "outDir": "./dist",
     "module": "nodenext",
     "target": "es2023",
-
     "sourceMap": true,
     "declaration": false,
     "declarationMap": false,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
     "strict": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
