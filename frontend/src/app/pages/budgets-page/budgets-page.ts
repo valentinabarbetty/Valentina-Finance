@@ -7,6 +7,7 @@ import { Goal, GoalService } from '../../services/goal.service';
 import { Category } from '../../models/financial-settings.models';
 import { BottomNavComponent } from '../../components/bottom-nav/bottom-nav';
 import { MoneyPipe } from '../../pipes/money.pipe';
+import { ConfirmService } from '../../services/confirm.service';
 
 @Component({
   selector: 'app-budgets-page',
@@ -19,6 +20,7 @@ export class BudgetsPage implements OnInit {
   private readonly budgetApi = inject(BudgetService);
   private readonly categoryApi = inject(CategoryService);
   private readonly goalApi = inject(GoalService);
+  private readonly confirm = inject(ConfirmService);
 
   readonly budgets = signal<Budget[]>([]);
   readonly categories = signal<Category[]>([]);
@@ -165,8 +167,14 @@ export class BudgetsPage implements OnInit {
     });
   }
 
-  deleteBudget(budget: Budget): void {
-    if (!window.confirm('¿Eliminar este presupuesto?')) return;
+  async deleteBudget(budget: Budget): Promise<void> {
+    const name = this.targetName(budget);
+    const ok = await this.confirm.ask({
+      title: '¿Eliminar presupuesto?',
+      message: `El presupuesto de "${name}" será eliminado permanentemente.`,
+      confirmLabel: 'Eliminar presupuesto',
+    });
+    if (!ok) return;
     this.budgetApi.remove(budget.id).subscribe({
       next: () => {
         this.showToast('Presupuesto eliminado.', 'success');

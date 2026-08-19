@@ -9,6 +9,7 @@ import { IncomeService } from '../../services/income.service';
 import { TransactionTypeService } from '../../services/transaction-type.service';
 import { BottomNavComponent } from '../../components/bottom-nav/bottom-nav';
 import { FabQuickAddComponent } from '../fab-quick-add/fab-quick-add';
+import { ConfirmService } from '../../services/confirm.service';
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -27,6 +28,7 @@ interface Toast {
 @Component({ selector: 'app-transactions-manager', imports: [ReactiveFormsModule, RouterLink, RouterLinkActive, BottomNavComponent, FabQuickAddComponent], templateUrl: './transactions-manager.html', styleUrl: './transactions-manager.scss' })
 export class TransactionsManagerComponent implements OnInit {
   private readonly builder = inject(FormBuilder); private readonly categoriesApi = inject(CategoryService); private readonly typesApi = inject(TransactionTypeService); private readonly expenses = inject(ExpenseService); private readonly incomes = inject(IncomeService);
+  private readonly confirm = inject(ConfirmService);
   @Input({ required: true }) kind!: 'expenses' | 'incomes';
 
   readonly records = signal<FinancialTransaction[]>([]); readonly categories = signal<Category[]>([]);
@@ -155,8 +157,15 @@ export class TransactionsManagerComponent implements OnInit {
     });
   }
 
-  remove(record: FinancialTransaction): void {
-    if (!window.confirm(`¿Eliminar ${this.singular()}?`)) return;
+  async remove(record: FinancialTransaction): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: `¿Eliminar ${this.singular()}?`,
+      message: record.description
+        ? `"${record.description}" será eliminado permanentemente.`
+        : 'Este registro será eliminado permanentemente.',
+      confirmLabel: `Eliminar ${this.singular()}`,
+    });
+    if (!ok) return;
     const request = this.isExpense() ? this.expenses.remove(record.id) : this.incomes.remove(record.id);
     request.subscribe({
       next: () => { this.showToast(`${this.singular()} eliminado.`, 'success'); this.load(); },

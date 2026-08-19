@@ -575,22 +575,22 @@ select {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.35rem 0.3rem 0.55rem;
+  /* Padding vertical aumentado ligeramente para que los descenders no se clipeen */
+  padding: 0.38rem 0.35rem 0.38rem 0.55rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   font-weight: 700;
   font-size: 0.8rem;
-  line-height: 1;
+  /* line-height normal en lugar de 1 para respetar métricas de la fuente */
+  line-height: 1.4;
   box-shadow: var(--shadow-xs);
-  /* Nunca más ancho que el viewport */
   max-width: 100%;
 }
 
 .month-selector button {
   display: grid;
   place-items: center;
-  /* Touch target mínimo 44×44 en mobile */
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
@@ -600,7 +600,6 @@ select {
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: background var(--duration-fast) var(--ease-out);
-  /* Evitar que el botón sea demasiado pequeño */
   min-width: 2rem;
   min-height: 2rem;
 }
@@ -616,6 +615,10 @@ select {
   color: var(--color-text-2);
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Asegurar que el texto tenga su propio line-height adecuado */
+  line-height: 1.4;
+  /* Pequeño padding vertical para que las letras con cola no se clipeen */
+  padding-block: 0.1rem;
 }
 
 /* ── Status badge ── */

@@ -6,6 +6,7 @@ import { CategoryService } from '../../services/category.service';
 import { TransactionTypeService } from '../../services/transaction-type.service';
 import { Category, CategoryKind, CategoryPayload, TransactionType, TransactionTypePayload } from '../../models/financial-settings.models';
 import { BottomNavComponent } from '../bottom-nav/bottom-nav';
+import { ConfirmService } from '../../services/confirm.service';
 
 interface CategoryWithType extends Category {
   types: TransactionType[];
@@ -36,6 +37,7 @@ export class SettingsManagerComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly categoryService = inject(CategoryService);
   private readonly typeService = inject(TransactionTypeService);
+  private readonly confirm = inject(ConfirmService);
 
   readonly categories = signal<CategoryWithType[]>([]);
   readonly loading = signal(true);
@@ -216,12 +218,18 @@ export class SettingsManagerComponent implements OnInit {
     }
   }
 
-  removeCategory(category: CategoryWithType): void {
+  async removeCategory(category: CategoryWithType): Promise<void> {
     const hasTypes = category.types.length > 0;
-    const msg = hasTypes
-      ? `La categoría "${category.name}" tiene ${category.types.length} tipo(s). ¿Eliminar la categoría y todos sus tipos?`
-      : `¿Eliminar la categoría "${category.name}"?`;
-    if (!window.confirm(msg)) return;
+    const message = hasTypes
+      ? `"${category.name}" tiene ${category.types.length} tipo${category.types.length !== 1 ? 's' : ''} asociado${category.types.length !== 1 ? 's' : ''}. Al eliminarla, también se eliminarán todos sus tipos.`
+      : `"${category.name}" será eliminada permanentemente.`;
+
+    const ok = await this.confirm.ask({
+      title: '¿Eliminar categoría?',
+      message,
+      confirmLabel: 'Eliminar categoría',
+    });
+    if (!ok) return;
 
     this.categoryService.remove(category.id).subscribe({
       next: () => {
@@ -232,8 +240,13 @@ export class SettingsManagerComponent implements OnInit {
     });
   }
 
-  removeType(type: TransactionType): void {
-    if (!window.confirm(`¿Eliminar el tipo "${type.name}"?`)) return;
+  async removeType(type: TransactionType): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: '¿Eliminar tipo?',
+      message: `"${type.name}" será eliminado permanentemente.`,
+      confirmLabel: 'Eliminar tipo',
+    });
+    if (!ok) return;
 
     this.typeService.remove(type.id).subscribe({
       next: () => {
