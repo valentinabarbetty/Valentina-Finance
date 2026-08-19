@@ -14,6 +14,7 @@ import { goalsRouter } from "./routes/goals.js";
 import { healthRouter } from "./routes/health.js";
 import { incomesRouter } from "./routes/incomes.js";
 import { transactionTypesRouter } from "./routes/transaction-types.js";
+import { wishlistRouter } from "./routes/wishlist.js";
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/expenses", expensesRouter);
 app.use("/api/incomes", incomesRouter);
 app.use("/api/budgets", budgetsRouter);
 app.use("/api/goals", goalsRouter);
+app.use("/api/wishlist", wishlistRouter);
 app.use(errorHandler);
 
 const server = app.listen(env.PORT, () => {

@@ -1,0 +1,254 @@
+<div class="page-shell">
+  <app-bottom-nav />
+
+  <main class="wishlist">
+    <header>
+      <div>
+        <p class="eyebrow">Valen Finance</p>
+        <h1>Mis compras</h1>
+        <p class="subtitle">Cosas que quiero comprar en el futuro.</p>
+      </div>
+    </header>
+
+    <!-- List Editor Modal -->
+    @if (listEditor()) {
+      <div class="editor-backdrop" (click)="listEditor.set(false)"></div>
+      <form class="editor-card" [formGroup]="listForm" (ngSubmit)="saveList()">
+        <h2>{{ editingListId() ? 'Editar lista' : 'Nueva lista' }}</h2>
+        <label>Nombre<input formControlName="name" placeholder="Belleza, Gaming, Ropa..." /></label>
+        <label>Icono<input formControlName="icon" placeholder="lipstick, gamepad, dress..." /></label>
+        <label>Descripcion<textarea formControlName="description" placeholder="Opcional"></textarea></label>
+        <div class="editor-actions">
+          <button class="btn-ghost" type="button" (click)="listEditor.set(false)">Cancelar</button>
+          <button class="btn-primary" type="submit">Guardar</button>
+        </div>
+      </form>
+    }
+
+    <!-- Item Editor Modal -->
+    @if (itemEditor()) {
+      <div class="editor-backdrop" (click)="itemEditor.set(false)"></div>
+      <form class="editor-card" [formGroup]="itemForm" (ngSubmit)="saveItem()">
+        <h2>{{ editingItemId() ? 'Editar articulo' : 'Nuevo articulo' }}</h2>
+        <label>Nombre<input formControlName="name" placeholder="Nombre del producto" /></label>
+        <label>Precio estimado<input formControlName="estimatedPrice" inputmode="decimal" placeholder="500000" /></label>
+        <label>Descripcion<textarea formControlName="description" placeholder="Opcional"></textarea></label>
+        <label>
+          Categoria
+          <select formControlName="categoryId" (change)="onItemCategoryChange()">
+            <option value="">Seleccionar categoria...</option>
+            @for (cat of expenseCategories(); track cat.id) {
+              <option [value]="cat.id">{{ cat.icon || 'folder' }} {{ cat.name }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Tipo <small>(opcional)</small>
+          <select formControlName="typeId" [disabled]="!itemForm.controls.categoryId.value">
+            <option value="">{{ itemForm.controls.categoryId.value ? 'Sin tipo' : 'Selecciona una categoria primero' }}</option>
+            @for (type of formTypes(); track type.id) {
+              <option [value]="type.id">{{ type.name }}</option>
+            }
+          </select>
+        </label>
+        <div class="editor-actions">
+          <button class="btn-ghost" type="button" (click)="itemEditor.set(false)">Cancelar</button>
+          <button class="btn-primary" type="submit">Guardar</button>
+        </div>
+      </form>
+    }
+
+    <!-- Purchase Modal -->
+    @if (purchaseEditor(); as item) {
+      <div class="editor-backdrop" (click)="purchaseEditor.set(false)"></div>
+      <form class="editor-card" [formGroup]="purchaseForm" (ngSubmit)="confirmPurchase()">
+        <h2>Completar compra</h2>
+        <p class="purchase-item-name">{{ purchasingItem()?.name }}</p>
+        <label>Precio real pagado<input formControlName="actualPrice" inputmode="decimal" placeholder="499900" /></label>
+        <label>Fecha de compra<input type="date" formControlName="date" /></label>
+        <label>
+          Categoria
+          <select formControlName="categoryId" (change)="onPurchaseCategoryChange()">
+            @for (cat of expenseCategories(); track cat.id) {
+              <option [value]="cat.id">{{ cat.icon || 'folder' }} {{ cat.name }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Tipo <small>(opcional)</small>
+          <select formControlName="typeId" [disabled]="!purchaseForm.controls.categoryId.value">
+            <option value="">{{ purchaseForm.controls.categoryId.value ? 'Sin tipo' : 'Selecciona una categoria primero' }}</option>
+            @for (type of formTypes(); track type.id) {
+              <option [value]="type.id">{{ type.name }}</option>
+            }
+          </select>
+        </label>
+        <div class="editor-actions">
+          <button class="btn-ghost" type="button" (click)="purchaseEditor.set(false)">Cancelar</button>
+          <button class="btn-primary" type="submit">Confirmar compra</button>
+        </div>
+      </form>
+    }
+
+    <!-- Content -->
+    @if (loading()) {
+      <p class="state-text">Cargando...</p>
+    } @else if (selectedList(); as list) {
+      <!-- List detail view -->
+      <div class="list-header">
+        <button class="btn-back" type="button" (click)="backToLists()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+          Volver
+        </button>
+        <div class="list-title-row">
+          <h2>{{ list.icon || 'shopping-bag' }} {{ list.name }}</h2>
+          <div class="list-actions-inline">
+            <button type="button" (click)="openEditList(list)" aria-label="Editar">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+            <button class="danger" type="button" (click)="deleteList(list)" aria-label="Eliminar">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="list-stats">
+          <span>{{ list.pendingCount }} pendiente{{ list.pendingCount !== 1 ? 's' : '' }}</span>
+          <span class="dot">.</span>
+          <span>{{ list.purchasedCount }} comprado{{ list.purchasedCount !== 1 ? 's' : '' }}</span>
+          @if (list.pendingEstimatedTotal && list.pendingCount > 0) {
+            <span class="dot">.</span>
+            <span>Estimado: {{ amount(list.pendingEstimatedTotal) }}</span>
+          }
+          @if (list.purchasedTotal && list.purchasedCount > 0) {
+            <span class="dot">.</span>
+            <span>Gastado: {{ amount(list.purchasedTotal) }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Filter tabs + add button -->
+      <div class="toolbar">
+        <div class="filter-tabs">
+          <button [class.active]="filterStatus() === 'all'" type="button" (click)="filterStatus.set('all')">Todos</button>
+          <button [class.active]="filterStatus() === 'PENDING'" type="button" (click)="filterStatus.set('PENDING')">Pendientes</button>
+          <button [class.active]="filterStatus() === 'PURCHASED'" type="button" (click)="filterStatus.set('PURCHASED')">Comprados</button>
+        </div>
+        <button class="btn-primary" type="button" (click)="openCreateItem()">+ Nuevo</button>
+      </div>
+
+      <!-- Items list -->
+      @if (!filteredItems().length) {
+        <div class="empty-state">
+          @if (filterStatus() === 'all') {
+            <p>Aun no tienes articulos en esta lista.</p>
+          } @else if (filterStatus() === 'PENDING') {
+            <p>No hay articulos pendientes.</p>
+          } @else {
+            <p>No hay articulos comprados aun.</p>
+          }
+          @if (filterStatus() !== 'PURCHASED') {
+            <button class="btn-secondary" type="button" (click)="openCreateItem()">+ Agregar articulo</button>
+          }
+        </div>
+      } @else {
+        <div class="items-list">
+          @for (item of filteredItems(); track item.id) {
+            <article class="item-row" [class.purchased]="item.status === 'PURCHASED'">
+              <div class="item-check">
+                @if (item.status === 'PURCHASED') {
+                  <span class="check-purchased">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  </span>
+                } @else {
+                  <span class="check-pending"></span>
+                }
+              </div>
+              <div class="item-body">
+                <p class="item-name">{{ item.name }}</p>
+                <p class="item-meta">
+                  {{ item.category?.name || 'Sin categoria' }}{{ item.type?.name ? ' · ' + item.type?.name : '' }}
+                  @if (item.status === 'PURCHASED' && item.purchasedAt) {
+                    <span class="item-date"> · {{ formatDate(item.purchasedAt) }}</span>
+                  }
+                </p>
+              </div>
+              <div class="item-right">
+                @if (item.status === 'PURCHASED') {
+                  <span class="item-price purchased-price">{{ amount(item.actualPrice) }}</span>
+                } @else {
+                  <span class="item-price">{{ item.estimatedPrice ? amount(item.estimatedPrice) : '' }}</span>
+                }
+                <div class="item-actions">
+                  @if (item.status === 'PENDING') {
+                    <button type="button" class="btn-purchase" (click)="openPurchase(item)" aria-label="Marcar como comprado">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+                    </button>
+                    <button type="button" (click)="openEditItem(item)" aria-label="Editar">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                  }
+                  <button class="danger" type="button" (click)="deleteItem(item)" aria-label="Eliminar">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  </button>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+    } @else {
+      <!-- Lists grid -->
+      @if (!lists().length) {
+        <div class="empty-state">
+          <p>Aun no tienes listas de compra. Crea la primera.</p>
+          <button class="btn-secondary" type="button" (click)="openCreateList()">+ Nueva lista</button>
+        </div>
+      } @else {
+        <div class="lists-grid">
+          @for (list of lists(); track list.id) {
+            <article class="list-card" (click)="openList(list.id)">
+              <div class="list-card-icon">{{ list.icon || 'shopping-bag' }}</div>
+              <div class="list-card-body">
+                <h3>{{ list.name }}</h3>
+                <p class="list-card-meta">
+                  {{ list.pendingCount }} pendiente{{ list.pendingCount !== 1 ? 's' : '' }}
+                  @if (list.purchasedCount > 0) {
+                    · {{ list.purchasedCount }} comprado{{ list.purchasedCount !== 1 ? 's' : '' }}
+                  }
+                </p>
+                @if (list.pendingEstimatedTotal && list.pendingCount > 0) {
+                  <p class="list-card-amount">{{ amount(list.pendingEstimatedTotal) }} estimado</p>
+                }
+                @if (list.purchasedTotal && list.purchasedCount > 0) {
+                  <p class="list-card-spent">{{ amount(list.purchasedTotal) }} gastado</p>
+                }
+              </div>
+              <div class="list-card-actions">
+                <button type="button" (click)="$event.stopPropagation(); openEditList(list)" aria-label="Editar">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button class="danger" type="button" (click)="$event.stopPropagation(); deleteList(list)" aria-label="Eliminar">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+        <button class="btn-add-list" type="button" (click)="openCreateList()">+ Nueva lista</button>
+      }
+    }
+  </main>
+</div>
+
+@if (toast(); as t) {
+  <div class="toast" [class.error]="t.type === 'error'">
+    @if (t.type === 'success') {
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
+    } @else {
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+    }
+    <span>{{ t.message }}</span>
+  </div>
+}

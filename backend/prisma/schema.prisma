@@ -103,6 +103,8 @@ model User {
   recurringExpenses  RecurringExpense[]
   debts              Debt[]
   debtPayments       DebtPayment[]
+  wishlistLists      WishlistList[]
+  wishlistItems      WishlistItem[]
 
   @@map("users")
 }
@@ -132,6 +134,7 @@ model TransactionType {
 
   expenses Expense[]
   incomes  Income[]
+  wishlistItems WishlistItem[]
 
   @@unique([userId, categoryId, name])
   @@index([userId])
@@ -163,6 +166,7 @@ model Category {
   budgets           Budget[]
   transactionTypes  TransactionType[]
   recurringExpenses RecurringExpense[]
+  wishlistItems     WishlistItem[]
 
   @@unique([userId, name])
   @@index([userId])
@@ -266,6 +270,7 @@ model Expense {
   notes               String?
   recurringExpenseId  String?          @db.Uuid // referencia al gasto recurrente que lo generó, evita duplicados
   recurringExpense    RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
+  wishlistItem        WishlistItem?
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
   deletedAt           DateTime?
@@ -391,4 +396,58 @@ model DebtPayment {
   @@index([userId])
   @@index([debtId, date])
   @@map("debt_payments")
+}
+
+// -----------------------------------------------------------------------------
+// Wishlist — Lista de compras futuras
+// -----------------------------------------------------------------------------
+
+enum WishlistItemStatus {
+  PENDING
+  PURCHASED
+}
+
+model WishlistList {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  icon        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  items WishlistItem[]
+
+  @@index([userId])
+  @@map("wishlist_lists")
+}
+
+model WishlistItem {
+  id             String             @id @default(uuid()) @db.Uuid
+  userId         String             @db.Uuid
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listId         String             @db.Uuid
+  list           WishlistList       @relation(fields: [listId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  estimatedPrice Decimal?           @db.Decimal(14, 2)
+  actualPrice    Decimal?           @db.Decimal(14, 2)
+  categoryId     String             @db.Uuid
+  category       Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  typeId         String?            @db.Uuid
+  type           TransactionType?   @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  status         WishlistItemStatus @default(PENDING)
+  purchasedAt    DateTime?          @db.Date
+  expenseId      String?            @db.Uuid @unique
+  expense        Expense?           @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  deletedAt      DateTime?
+
+  @@index([userId])
+  @@index([listId])
+  @@index([status])
+  @@map("wishlist_items")
 }

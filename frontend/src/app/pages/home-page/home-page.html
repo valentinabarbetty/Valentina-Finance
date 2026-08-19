@@ -67,10 +67,13 @@
         </div>
       </section>
 
-      <!-- ⑤ Dinero no asignado -->
+      <!-- ⑤ Wishlist summary -->
+      <app-wishlist-summary />
+
+      <!-- ⑥ Dinero no asignado -->
       <app-unallocated-card [unallocated]="data.unallocated" />
 
-      <!-- ⑥ Meta + Comparación -->
+      <!-- ⑦ Meta + Comparación -->
       <div class="dash-row">
         <section class="panel">
           <div class="section-head" style="margin-bottom:0.75rem">
@@ -95,7 +98,7 @@
         </section>
       </div>
 
-      <!-- ⑦ Desglose + Movimientos recientes -->
+      <!-- ⑧ Desglose + Movimientos recientes -->
       <div class="dash-row">
         <section class="panel">
           <div class="section-head" style="margin-bottom:0.75rem">
@@ -113,7 +116,7 @@
         </section>
       </div>
 
-      <!-- ⑧ Evolución financiera -->
+      <!-- ⑨ Evolución financiera -->
       <section class="panel">
         <div class="section-head" style="margin-bottom:0.75rem">
           <h2>Evolución financiera</h2>

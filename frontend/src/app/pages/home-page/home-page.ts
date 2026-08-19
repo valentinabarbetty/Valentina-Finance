@@ -15,6 +15,7 @@ import { FinancialOverviewComponent } from "../../components/financial-overview/
 import { BudgetStatusComponent } from "../../components/budget-status/budget-status";
 import { UnallocatedCardComponent } from "../../components/unallocated-card/unallocated-card";
 import { MonthComparisonComponent } from "../../components/month-comparison/month-comparison";
+import { WishlistSummaryComponent } from "../../components/wishlist-summary/wishlist-summary.component";
 
 const MONTH_NAMES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -36,6 +37,7 @@ const MONTH_NAMES = [
     BudgetStatusComponent,
     UnallocatedCardComponent,
     MonthComparisonComponent,
+    WishlistSummaryComponent,
   ],
   templateUrl: "./home-page.html",
   styleUrl: "./home-page.scss",
