@@ -18,8 +18,14 @@ import { transactionTypesRouter } from "./routes/transaction-types.js";
 const app = express();
 
 app.disable("x-powered-by");
+app.use(cors({
+  origin: [
+    "https://valentina-finance.vercel.app",
+    "http://localhost:4200",
+  ],
+  credentials: true,
+}));
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 app.use(healthRouter);
 app.use("/api/auth", authRouter);
