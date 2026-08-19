@@ -17,6 +17,7 @@ export interface TransactionType {
   icon: string | null;
   color: string | null;
   kind: TransactionKind;
+  categoryId: string;
 }
 
 export interface CategoryPayload {
@@ -33,6 +34,7 @@ export interface TransactionTypePayload {
   icon?: string | null;
   color?: string | null;
   kind: TransactionKind;
+  categoryId: string;
 }
 
 export interface TransactionRelation { id: string; name: string; icon: string | null; color: string | null; kind?: TransactionKind; }

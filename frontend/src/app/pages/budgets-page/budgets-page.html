@@ -1,0 +1,171 @@
+<div class="page-shell">
+  <app-bottom-nav />
+
+  <main class="budgets">
+    <header>
+      <div>
+        <p class="eyebrow">Valen Finance</p>
+        <h1>Mis presupuestos</h1>
+        <p class="subtitle">Planifica tus gastos y ahorros por meta.</p>
+      </div>
+    </header>
+
+    <!-- Navegación de mes -->
+    <div class="month-nav">
+      <button class="btn-ghost" type="button" (click)="prevMonth()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+        Anterior
+      </button>
+      <span class="month-label">{{ monthLabel() }}</span>
+      <button class="btn-ghost" type="button" (click)="nextMonth()">
+        Siguiente
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    @if (editorOpen()) {
+      <div class="editor-backdrop" (click)="editorOpen.set(false)"></div>
+      <form class="editor-card" [formGroup]="form" (ngSubmit)="save()">
+        <h2>{{ editingId() ? 'Editar presupuesto' : 'Nuevo presupuesto' }}</h2>
+
+        @if (mode() === 'expense') {
+          <label>
+            Categoría
+            <select formControlName="categoryId">
+              <option value="">Seleccionar categoría…</option>
+              @for (cat of categoriesForSelect(); track cat.id) {
+                <option [value]="cat.id">{{ cat.icon || '📂' }} {{ cat.name }}</option>
+              }
+            </select>
+          </label>
+        } @else {
+          <label>
+            Meta
+            <select formControlName="goalId">
+              <option value="">Seleccionar meta…</option>
+              @for (goal of goalsForSelect(); track goal.id) {
+                <option [value]="goal.id">{{ goal.icon || '🎯' }} {{ goal.name }}</option>
+              }
+            </select>
+          </label>
+        }
+
+        <label>
+          Monto planeado
+          <input formControlName="plannedAmount" inputmode="decimal" placeholder="500000" />
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="isRecurring" />
+          Recurrente (se aplica cada mes automáticamente)
+        </label>
+
+        @if (!form.getRawValue().isRecurring) {
+          <div class="split">
+            <label>
+              Mes
+              <select formControlName="month">
+                @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
+                  <option [value]="m">{{ m }}</option>
+                }
+              </select>
+            </label>
+            <label>
+              Año
+              <input type="number" formControlName="year" min="2000" max="2100" />
+            </label>
+          </div>
+        }
+
+        <div class="editor-actions">
+          <button class="btn-ghost" type="button" (click)="editorOpen.set(false)">Cancelar</button>
+          <button class="btn-primary" type="submit">Guardar</button>
+        </div>
+      </form>
+    }
+
+    @if (loading()) {
+      <p class="state-text">Cargando presupuestos…</p>
+    } @else {
+
+      <!-- Gastos -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Presupuesto de gastos</h2>
+          <button class="btn-secondary" type="button" (click)="openCreate('expense')">+ Nuevo</button>
+        </div>
+        @if (expenseBudgets().length === 0) {
+          <div class="empty-state">No hay presupuestos de gasto para este mes.</div>
+        } @else {
+          <div class="cards">
+            @for (b of expenseBudgets(); track b.id) {
+              <article class="budget-card">
+                <span class="card-icon">{{ targetIcon(b) }}</span>
+                <div class="card-body">
+                  <p class="card-name">{{ targetName(b) }}</p>
+                  <p class="card-meta">{{ label(b) }}</p>
+                </div>
+                <div class="card-right">
+                  <span class="card-amount">{{ b.plannedAmount | money }}</span>
+                  <div class="card-actions">
+                    <button type="button" (click)="openEdit(b)" aria-label="Editar">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                    <button class="danger" type="button" (click)="deleteBudget(b)" aria-label="Eliminar">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Ahorro por meta -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Ahorro por meta</h2>
+          <button class="btn-secondary" type="button" (click)="openCreate('goal')">+ Nuevo</button>
+        </div>
+        @if (goalBudgets().length === 0) {
+          <div class="empty-state">No hay presupuestos de ahorro para este mes.</div>
+        } @else {
+          <div class="cards">
+            @for (b of goalBudgets(); track b.id) {
+              <article class="budget-card">
+                <span class="card-icon">{{ targetIcon(b) }}</span>
+                <div class="card-body">
+                  <p class="card-name">{{ targetName(b) }}</p>
+                  <p class="card-meta">{{ label(b) }}</p>
+                </div>
+                <div class="card-right">
+                  <span class="card-amount">{{ b.plannedAmount | money }}</span>
+                  <div class="card-actions">
+                    <button type="button" (click)="openEdit(b)" aria-label="Editar">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                    <button class="danger" type="button" (click)="deleteBudget(b)" aria-label="Eliminar">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+  </main>
+</div>
+
+@if (toast(); as t) {
+  <div class="toast" [class.error]="t.type === 'error'">
+    @if (t.type === 'success') {
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
+    } @else {
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+    }
+    <span>{{ t.message }}</span>
+  </div>
+}

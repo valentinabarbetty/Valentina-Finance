@@ -12,6 +12,9 @@ import { EvolutionChartComponent } from "../../components/evolution-chart/evolut
 import { CategoryBreakdownComponent } from "../../components/category-breakdown/category-breakdown";
 import { RecentTransactionsComponent } from "../../components/recent-transactions/recent-transactions";
 import { FinancialOverviewComponent } from "../../components/financial-overview/financial-overview";
+import { BudgetStatusComponent } from "../../components/budget-status/budget-status";
+import { UnallocatedCardComponent } from "../../components/unallocated-card/unallocated-card";
+import { MonthComparisonComponent } from "../../components/month-comparison/month-comparison";
 
 const MONTH_NAMES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -29,7 +32,10 @@ const MONTH_NAMES = [
     EvolutionChartComponent,
     CategoryBreakdownComponent,
     RecentTransactionsComponent,
-    FinancialOverviewComponent
+    FinancialOverviewComponent,
+    BudgetStatusComponent,
+    UnallocatedCardComponent,
+    MonthComparisonComponent,
   ],
   templateUrl: "./home-page.html",
   styleUrl: "./home-page.scss",

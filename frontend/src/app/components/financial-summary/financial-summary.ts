@@ -39,13 +39,12 @@ export class FinancialSummaryComponent {
     const data = this._summary();
     if (!data) return [];
 
-    const income = Number(data.incomeTotal);
-    const expense = Number(data.expenseTotal);
-    const savings = Number(data.savingsAmount);
-    const prevIncome = Number(data.previousMonthComparison.incomeTotal);
-    const prevExpense = Number(data.previousMonthComparison.expenseTotal);
-    const prevSavings = prevIncome - prevExpense;
-    const prevSavingsRate = prevIncome > 0 ? (prevSavings / prevIncome) * 100 : 0;
+    const income = Number(data.monthly.income);
+    const expense = Number(data.monthly.expenses);
+    const savings = Number(data.monthly.savingsContributions);
+    const prevIncome = Number(data.previousMonthComparison.income);
+    const prevExpense = Number(data.previousMonthComparison.expenses);
+    const prevSavings = Number(data.previousMonthComparison.savingsContributions);
 
     const buildDelta = (change: { value: number; direction: Direction }, invert = false) => {
       if (change.direction === 'new') return { label: 'Nuevo este mes', direction: change.direction };
@@ -57,22 +56,10 @@ export class FinancialSummaryComponent {
       };
     };
 
-    const rateDelta = Math.round(data.savingsPercentage - prevSavingsRate);
-
     return [
-      { icon: '💰', label: 'Ingresos', value: data.incomeTotal, isMoney: true, tone: 'income', delta: buildDelta(percentChange(income, prevIncome)) },
-      { icon: '💸', label: 'Gastos', value: data.expenseTotal, isMoney: true, tone: 'expense', delta: buildDelta(percentChange(expense, prevExpense), true) },
-      { icon: '💗', label: 'Ahorrado', value: data.savingsAmount, isMoney: true, tone: 'savings', delta: buildDelta(percentChange(savings, prevSavings)) },
-      {
-        icon: '📊',
-        label: 'Tasa de ahorro',
-        value: `${data.savingsPercentage}%`,
-        isMoney: false,
-        tone: 'rate',
-        delta: prevIncome > 0
-          ? { label: `${rateDelta >= 0 ? '↑' : '↓'} ${Math.abs(rateDelta)} pts vs. mes anterior`, direction: rateDelta >= 0 ? 'up' : 'down' }
-          : null,
-      },
+      { icon: '💰', label: 'Ingresos', value: data.monthly.income, isMoney: true, tone: 'income', delta: buildDelta(percentChange(income, prevIncome)) },
+      { icon: '💸', label: 'Gastos', value: data.monthly.expenses, isMoney: true, tone: 'expense', delta: buildDelta(percentChange(expense, prevExpense), true) },
+      { icon: '💗', label: 'Aportes a ahorro', value: data.monthly.savingsContributions, isMoney: true, tone: 'savings', delta: buildDelta(percentChange(savings, prevSavings)) },
     ];
   });
 }

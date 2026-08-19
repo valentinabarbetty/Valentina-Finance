@@ -1,44 +1,54 @@
+/* =============================================================================
+   Recent Transactions — lista de últimos movimientos en el dashboard
+   ============================================================================= */
+
 .movements-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.5rem;
+  gap: 0;
 }
 
 .movement-row {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.7rem 0;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--color-border-soft);
+  /* Contener contenido */
+  min-width: 0;
+  overflow: hidden;
 }
 
-.movement-row + .movement-row {
-  border-top: 1px solid var(--color-border);
-}
+.movement-row:first-child { padding-top: 0; }
+.movement-row:last-child  { padding-bottom: 0; border-bottom: none; }
 
 .movement-icon {
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  width: 2.3rem;
-  height: 2.3rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: var(--radius-full);
-  font-size: 1rem;
+  font-size: 0.85rem;
   background: var(--color-accent-soft);
 }
+
+.movement-icon.income  { background: var(--color-success-soft); }
+.movement-icon.expense { background: var(--color-error-soft); }
 
 .movement-body {
   flex: 1;
   min-width: 0;
   display: grid;
-  gap: 0.1rem;
+  gap: 0.04rem;
 }
 
 .movement-name {
   margin: 0;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
@@ -47,7 +57,7 @@
 
 .movement-sub {
   margin: 0;
-  font-size: 0.76rem;
+  font-size: 0.7rem;
   color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -56,30 +66,33 @@
 
 .movement-amount {
   flex-shrink: 0;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.movement-amount.income {
-  color: var(--color-success);
-}
-
-.movement-amount.expense {
-  color: var(--color-error);
-}
+.movement-amount.income  { color: var(--color-success); }
+.movement-amount.expense { color: var(--color-error); }
 
 .movement-links {
   display: flex;
   justify-content: center;
-  gap: 1.2rem;
-  margin-top: 0.9rem;
+  gap: 1rem;
+  margin-top: 0.7rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--color-border-soft);
 }
 
 .movement-links a {
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--color-accent-strong);
+  text-decoration: none;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.movement-links a:hover {
+  opacity: 0.7;
   text-decoration: none;
 }
 
@@ -87,6 +100,6 @@
   margin: 0;
   text-align: center;
   color: var(--color-text-muted);
-  font-size: 0.85rem;
-  padding: 1rem 0;
+  font-size: 0.82rem;
+  padding: 0.5rem 0;
 }

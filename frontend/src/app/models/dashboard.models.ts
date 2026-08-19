@@ -33,13 +33,39 @@ export interface NextGoal {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
+export type GoalPreview = NextGoal;
+
+export interface BudgetStatusItem {
+  category: CategoryRef;
+  plannedAmount: string;
+  spentAmount: string;
+  remainingAmount: string;
+  percentage: number;
+  status: 'UNDER_BUDGET' | 'NEAR_LIMIT' | 'OVER_BUDGET';
+}
+
+export interface Unallocated {
+  amount: string;
+  status: 'BALANCED' | 'OVER_ALLOCATED';
+}
+
+export interface MonthlyFinancials {
+  income: string;
+  expenses: string;
+  savingsContributions: string;
+  incomeCount: number;
+  expenseCount: number;
+}
+
 export interface PreviousMonthComparison {
   month: number;
   year: number;
-  incomeTotal: string;
-  expenseTotal: string;
+  income: string;
+  expenses: string;
+  savingsContributions: string;
   incomeDifference: string;
   expenseDifference: string;
+  savingsDifference: string;
 }
 
 export interface MonthlyEvolutionItem {
@@ -52,37 +78,19 @@ export interface MonthlyEvolutionItem {
 export interface DashboardSummary {
   month: number;
   year: number;
-  incomeTotal: string;
-  expenseTotal: string;
-  savingsAmount: string;
-  savingsPercentage: number;
-  expenseCount: number;
-  incomeCount: number;
+
+  currentBalance: string;
+  totalSavings: string;
+
+  monthly: MonthlyFinancials;
+
+  budgets: BudgetStatusItem[];
+
+  unallocated: Unallocated;
+
   expensesByCategory: ExpenseByCategory[];
   recentTransactions: RecentMovement[];
   nextGoal: NextGoal | null;
   previousMonthComparison: PreviousMonthComparison;
   monthlyEvolution: MonthlyEvolutionItem[];
-  globalStats: GlobalStats;
-}
-export interface NextGoal {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  targetAmount: string;
-  currentAmount: string;
-  pendingAmount: string;
-  percentage: number;
-  targetDate: string | null;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
-}
-
-/** Alias para compatibilidad con goal-progress-card.ts, que ya usaba este nombre. */
-export type GoalPreview = NextGoal;
-export interface GlobalStats {
-  totalIncome: string;
-  totalExpense: string;
-  netBalance: string;
-  totalContributedToGoals: string;
 }

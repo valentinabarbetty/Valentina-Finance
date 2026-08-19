@@ -1,0 +1,14 @@
+<article class="unallocated-card" [class.over]="unallocated.status === 'OVER_ALLOCATED'">
+  <div class="unallocated-indicator" aria-hidden="true">
+    @if (unallocated.status === 'OVER_ALLOCATED') { ⚠️ } @else { 📋 }
+  </div>
+  <div class="unallocated-body">
+    <p class="unallocated-label">Dinero no asignado</p>
+    <p class="unallocated-value">{{ unallocated.amount | money }}</p>
+    @if (unallocated.status === 'OVER_ALLOCATED') {
+      <p class="unallocated-hint">Las asignaciones superan tus ingresos del mes.</p>
+    } @else {
+      <p class="unallocated-hint">Sin presupuesto de gasto ni ahorro asignado.</p>
+    }
+  </div>
+</article>

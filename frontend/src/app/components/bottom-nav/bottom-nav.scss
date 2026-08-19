@@ -1,85 +1,170 @@
+/* =============================================================================
+   Valen Finance — Bottom Nav (mobile) / Sidebar (desktop)
+   ============================================================================= */
+
+/* ── Mobile: fixed bottom bar ── */
 .bottom-nav {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 0.5rem 0.25rem calc(0.5rem + env(safe-area-inset-bottom));
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  box-shadow: 0 -8px 24px -16px rgba(52, 38, 43, 0.18);
   z-index: 40;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: stretch;
+  padding: 0 0.25rem calc(env(safe-area-inset-bottom, 0px));
+  height: calc(var(--nav-height-mob) + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.94);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -2px 12px -4px rgba(46, 31, 37, 0.1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
-.nav-brand {
-  display: none;
-}
-
-.bottom-nav a {
-  display: grid;
-  justify-items: center;
-  gap: 0.2rem;
-  padding: 0.35rem 0.5rem;
-  min-width: 3.5rem;
+/* ── Nav item ── */
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+  padding: 0.5rem 0.2rem;
   color: var(--color-text-muted);
   text-decoration: none;
-  font-size: 0.66rem;
+  font-size: 0.6rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
   border-radius: var(--radius-sm);
   transition:
-    color var(--duration-fast) var(--ease-out),
-    background var(--duration-fast) var(--ease-out);
+    color        var(--duration-fast) var(--ease-out),
+    background   var(--duration-fast) var(--ease-out);
+  position: relative;
 }
 
-.bottom-nav a svg {
+.nav-item svg {
   width: 20px;
   height: 20px;
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-spring);
 }
 
-.bottom-nav a.active {
+/* Active state */
+.nav-item.active {
   color: var(--color-accent-strong);
-  background: var(--color-accent-soft);
 }
 
+.nav-item.active svg {
+  transform: scale(1.1);
+}
+
+/* Active dot indicator */
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0.3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+}
+
+/* Tap feedback */
+.nav-item:active {
+  transform: scale(0.93);
+}
+
+/* ── Desktop: sticky left sidebar ── */
 @media (min-width: 1024px) {
   .bottom-nav {
     position: sticky;
     top: 0;
-    left: auto;
-    right: auto;
+    left: 0;
     bottom: auto;
-    flex-shrink: 0;
-    width: 232px;
+    right: auto;
     height: 100vh;
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 0.3rem;
-    padding: 1.5rem 0.9rem;
-    border-top: 0;
+
+    padding: 0;
+    border-top: none;
     border-right: 1px solid var(--color-border);
-    box-shadow: 12px 0 28px -20px rgba(52, 38, 43, 0.18);
+    box-shadow: 2px 0 16px -8px rgba(46, 31, 37, 0.08);
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
-  .nav-brand {
-    display: block;
-    margin: 0 0 1.2rem 0.4rem;
+  /* Brand header */
+  .bottom-nav::before {
+    content: 'Valen Finance';
+    display: flex;
+    align-items: center;
+    height: 3.5rem;
+    flex-shrink: 0;
+    padding: 0 1.1rem;
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--color-text);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-accent-strong);
+    letter-spacing: 0.01em;
+    border-bottom: 1px solid var(--color-border-soft);
+    background: var(--grad-subtle);
   }
 
-  .bottom-nav a {
+  /* Nav items */
+  .nav-item {
+    flex: 0 0 auto;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-    padding: 0.65rem 0.9rem;
-    font-size: 0.85rem;
+    gap: 0.7rem;
+    padding: 0.62rem 1.1rem;
+    margin: 0 0.5rem;
+    width: calc(100% - 1rem);
     border-radius: var(--radius-md);
+    font-size: 0.84rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--color-text-2);
   }
+
+  .nav-item:first-child {
+    margin-top: 0.75rem;
+  }
+
+  .nav-item svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  /* Active state desktop */
+  .nav-item.active {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-strong);
+    font-weight: 700;
+  }
+
+  .nav-item.active svg { transform: none; }
+
+  .nav-item.active::after { display: none; }
+
+  .nav-item:hover:not(.active) {
+    background: var(--color-bg-alt);
+    color: var(--color-text);
+  }
+
+  /* No tap scale on desktop */
+  .nav-item:active { transform: none; }
 }

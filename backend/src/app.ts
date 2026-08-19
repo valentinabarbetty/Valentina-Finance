@@ -6,6 +6,7 @@ import { env } from "./config/env.js";
 import { errorHandler } from "./middlewares/error-handler.js";
 import { prisma } from "./config/prisma.js";
 import { authRouter } from "./routes/auth.js";
+import { budgetsRouter } from "./routes/budgets.js";
 import { categoriesRouter } from "./routes/categories.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { expensesRouter } from "./routes/expenses.js";
@@ -27,6 +28,7 @@ app.use("/api/dashboard", dashboardRouter);
 app.use("/api/transaction-types", transactionTypesRouter);
 app.use("/api/expenses", expensesRouter);
 app.use("/api/incomes", incomesRouter);
+app.use("/api/budgets", budgetsRouter);
 app.use("/api/goals", goalsRouter);
 app.use(errorHandler);
 

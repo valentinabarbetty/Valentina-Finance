@@ -1,20 +1,24 @@
-<section class="overview-card" aria-label="Estado financiero general">
-  <p class="overview-label">Balance acumulado</p>
-  <p class="overview-balance" [class.negative]="+stats.netBalance < 0">{{ stats.netBalance | money }}</p>
-  <p class="overview-caption">Lo registrado históricamente en Valen Finance</p>
+<section class="overview-hero" aria-label="Estado financiero general">
 
-  <div class="overview-grid">
-    <div class="overview-item">
-      <span class="overview-item-label">Total ingresado</span>
-      <span class="overview-item-value income">{{ stats.totalIncome | money }}</span>
+  <!-- Balance actual -->
+  <div class="overview-main">
+    <p class="overview-label">Balance actual</p>
+    <p class="overview-balance" [class.negative]="+currentBalance < 0">{{ currentBalance | money }}</p>
+    <p class="overview-caption">Ingresos − Gastos − Aportes a metas</p>
+  </div>
+
+  <!-- Divisor -->
+  <div class="overview-divider" aria-hidden="true"></div>
+
+  <!-- Total ahorrado -->
+  <div class="overview-savings">
+    <div class="savings-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><path d="M18 2v4h4"/></svg>
     </div>
-    <div class="overview-item">
-      <span class="overview-item-label">Total gastado</span>
-      <span class="overview-item-value expense">{{ stats.totalExpense | money }}</span>
-    </div>
-    <div class="overview-item">
-      <span class="overview-item-label">Aportado a metas</span>
-      <span class="overview-item-value">{{ stats.totalContributedToGoals | money }}</span>
+    <div>
+      <p class="savings-label">Total ahorrado en metas</p>
+      <p class="savings-value">{{ totalSavings | money }}</p>
     </div>
   </div>
+
 </section>
