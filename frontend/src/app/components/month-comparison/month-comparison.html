@@ -1,0 +1,22 @@
+<div class="comparison-card">
+  <div class="comparison-rows">
+    <div class="comparison-row">
+      <span class="comparison-label">Ingresos</span>
+      <span class="comparison-diff" [class]="diffClass(comparison.incomeDifference)">
+        {{ diffSign(comparison.incomeDifference) }}{{ comparison.incomeDifference | money }} vs. {{ monthName }}
+      </span>
+    </div>
+    <div class="comparison-row">
+      <span class="comparison-label">Gastos</span>
+      <span class="comparison-diff" [class]="diffClass(comparison.expenseDifference)">
+        {{ diffSign(comparison.expenseDifference) }}{{ comparison.expenseDifference | money }} vs. {{ monthName }}
+      </span>
+    </div>
+    <div class="comparison-row">
+      <span class="comparison-label">Ahorro</span>
+      <span class="comparison-diff" [class]="diffClass(comparison.savingsDifference)">
+        {{ diffSign(comparison.savingsDifference) }}{{ comparison.savingsDifference | money }} vs. {{ monthName }}
+      </span>
+    </div>
+  </div>
+</div>

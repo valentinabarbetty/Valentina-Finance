@@ -1,0 +1,42 @@
+@if (budgets.length) {
+  <ul class="budget-list" role="list">
+    @for (b of budgets; track b.category.id) {
+      <li class="budget-row">
+        <div class="budget-left">
+          <span class="budget-icon" aria-hidden="true">{{ b.category.icon || '📂' }}</span>
+        </div>
+        <div class="budget-center">
+          <div class="budget-top">
+            <span class="budget-name">{{ b.category.name }}</span>
+            <span class="budget-amounts">
+              <span class="spent">{{ b.spentAmount | money }}</span>
+              <span class="sep"> / </span>
+              <span class="planned">{{ b.plannedAmount | money }}</span>
+            </span>
+          </div>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [class.success]="b.status === 'UNDER_BUDGET'"
+              [class.warning]="b.status === 'NEAR_LIMIT'"
+              [class.error]="b.status === 'OVER_BUDGET'"
+              [style.width.%]="b.percentage > 100 ? 100 : b.percentage">
+            </div>
+          </div>
+          <div class="budget-bottom">
+            <span class="budget-pct">{{ b.percentage }}%</span>
+            <span class="budget-status-text" [class]="b.status">
+              @if (b.status === 'OVER_BUDGET') {
+                {{ abs(b.remainingAmount) | money }} excedido
+              } @else {
+                {{ b.remainingAmount | money }} restantes
+              }
+            </span>
+          </div>
+        </div>
+      </li>
+    }
+  </ul>
+} @else {
+  <p class="budget-empty">No hay presupuestos configurados para este mes.</p>
+}

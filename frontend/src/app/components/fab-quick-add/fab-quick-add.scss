@@ -1,40 +1,38 @@
 .fab-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(52, 38, 43, 0.28);
+  background: rgba(46, 31, 37, 0.22);
   z-index: 45;
   animation: fade-in var(--duration-fast) var(--ease-out) both;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .fab-wrap {
   position: fixed;
-  right: 1.25rem;
+  right: 1.1rem;
   bottom: calc(5.5rem + env(safe-area-inset-bottom));
   z-index: 50;
   display: grid;
   justify-items: end;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .fab {
-  width: 58px;
-  height: 58px;
+  width: 56px;
+  height: 56px;
   display: grid;
   place-items: center;
   border: 0;
   border-radius: var(--radius-full);
   color: #fff;
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
-  box-shadow: 0 16px 32px -14px rgba(168, 87, 99, 0.55);
+  box-shadow: 0 12px 28px -10px rgba(168, 87, 99, 0.5);
   cursor: pointer;
   transition:
     transform var(--duration-base) var(--ease-out),
@@ -43,6 +41,7 @@
 
 .fab:hover {
   transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 16px 32px -10px rgba(168, 87, 99, 0.55);
 }
 
 .fab.is-open {
@@ -51,54 +50,40 @@
 
 .fab-menu {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-items: end;
 }
 
 .fab-menu a {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 0.9rem 0.55rem 0.55rem;
+  gap: 0.5rem;
+  padding: 0.5rem 0.8rem 0.5rem 0.5rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm);
   color: var(--color-text);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
   animation: pop-in var(--duration-base) var(--ease-out) both;
 }
 
-.fab-menu a:nth-child(1) {
-  animation-delay: 0ms;
-}
-.fab-menu a:nth-child(2) {
-  animation-delay: 40ms;
-}
-.fab-menu a:nth-child(3) {
-  animation-delay: 80ms;
-}
-.fab-menu a:nth-child(4) {
-  animation-delay: 120ms;
-}
+.fab-menu a:nth-child(1) { animation-delay: 0ms; }
+.fab-menu a:nth-child(2) { animation-delay: 35ms; }
+.fab-menu a:nth-child(3) { animation-delay: 70ms; }
+.fab-menu a:nth-child(4) { animation-delay: 105ms; }
 
 @keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(6px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .fab-menu-icon {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-full);
@@ -106,20 +91,14 @@
 }
 
 .fab-menu-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
-.fab-menu-icon.expense {
-  background: var(--color-error);
-}
-.fab-menu-icon.income {
-  background: var(--color-success);
-}
+.fab-menu-icon.expense { background: var(--color-error); }
+.fab-menu-icon.income { background: var(--color-success); }
 .fab-menu-icon.goal,
-.fab-menu-icon.new-goal {
-  background: var(--color-accent);
-}
+.fab-menu-icon.new-goal { background: var(--color-accent); }
 
 @media (min-width: 1024px) {
   .fab-wrap {

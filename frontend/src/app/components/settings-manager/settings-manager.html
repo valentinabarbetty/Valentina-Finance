@@ -5,22 +5,22 @@
     <header class="manager-header">
       <div>
         <p class="eyebrow">Valen Finance</p>
-        <h1>{{ title() }}</h1>
-        <p class="subtitle">Organiza tus opciones personales a tu manera.</p>
+        <h1>Estructura financiera</h1>
+        <p class="subtitle">Administra tus categorías y tipos de transacción.</p>
       </div>
-      <button type="button" class="btn-primary" (click)="openCreate()">+ Nueva {{ singular() }}</button>
+      <button type="button" class="btn-primary" (click)="openCreateCategory()">+ Nueva categoría</button>
     </header>
 
-    @if (formVisible()) {
+    @if (editorMode(); as mode) {
       <div class="editor-backdrop" (click)="cancel()"></div>
       <form class="editor-card" [formGroup]="form" (ngSubmit)="save()">
-        <h2>{{ editingId() ? "Editar" : "Crear" }} {{ singular() }}</h2>
+        <h2>{{ editorTitle() }}</h2>
 
         @if (formError()) { <p class="form-error">{{ formError() }}</p> }
 
         <label>
           Nombre
-          <input formControlName="name" maxlength="100" />
+          <input formControlName="name" maxlength="100" placeholder="Ej. Arriendo" />
         </label>
         @if (form.controls.name.touched && form.controls.name.invalid) {
           <p class="field-error">El nombre es obligatorio.</p>
@@ -31,10 +31,10 @@
           <textarea formControlName="description" maxlength="500"></textarea>
         </label>
 
-        <div class="two-columns">
+        <div class="two_columns">
           <label>
             Icono
-            <input formControlName="icon" placeholder="Ej. ✨" maxlength="100" />
+            <input formControlName="icon" placeholder="Ej. 🏠" maxlength="100" />
           </label>
           <label>
             Color
@@ -42,52 +42,98 @@
           </label>
         </div>
 
-        <label>
-          {{ isTransactionType() ? "Tipo" : "Aplica a" }}
-          <select formControlName="kind">
-            @if (!isTransactionType()) { <option value="GENERAL">General</option> }
-            <option value="EXPENSE">Gasto</option>
-            <option value="INCOME">Ingreso</option>
-          </select>
-        </label>
+        @if (isCategoryEditor()) {
+          <label>
+            Aplica a
+            <select formControlName="kind">
+              <option value="GENERAL">General</option>
+              <option value="EXPENSE">Gasto</option>
+              <option value="INCOME">Ingreso</option>
+            </select>
+          </label>
+        } @else {
+          <p class="kind-badge">
+            Tipo:
+            <span class="record_kind">{{ (form.controls.kind.value === 'INCOME') ? 'Ingreso' : 'Gasto' }}</span>
+          </p>
+        }
 
-        <div class="editor-actions">
-          <button type="button" class="btn-ghost" (click)="cancel()">Cancelar</button>
-          <button type="submit" class="btn-primary" [disabled]="saving()">{{ saving() ? "Guardando…" : "Guardar" }}</button>
+        <div class="editor_actions">
+          <button type="button" class="btn_ghost" (click)="cancel()">Cancelar</button>
+          <button type="submit" class="btn_primary" [disabled]="saving()">{{ saving() ? "Guardando…" : "Guardar" }}</button>
         </div>
       </form>
     }
 
     @if (loading()) {
-      <p class="state-text">Cargando…</p>
-    } @else if (!records().length) {
-      <div class="empty-state">
-        <p>Todavía no tienes {{ isTransactionType() ? "tipos de transacción" : "categorías" }} 💗</p>
-        <button type="button" class="btn-secondary" (click)="openCreate()">+ Crear {{ singular() }}</button>
+      <p class="state_text">Cargando…</p>
+    } @else if (!categories().length) {
+      <div class="empty_state">
+        <p>Todavía no tienes categorías 💗</p>
+        <button type="button" class="btn_secondary" (click)="openCreateCategory()">+ Crear categoría</button>
       </div>
     } @else {
-      <div class="records-list">
-        @for (record of records(); track record.id) {
-          <article class="record-row">
-            <span class="record-swatch" [style.background]="record.color || 'var(--color-accent-soft)'">{{ record.icon || "✦" }}</span>
-            <div class="record-body">
-              <p class="record-name">{{ record.name }}</p>
-              <p class="record-sub">{{ record.description || "Sin descripción" }}</p>
-            </div>
-            <div class="record-right">
-              <span class="record-kind">{{ record.kind === "EXPENSE" ? "Gasto" : record.kind === "INCOME" ? "Ingreso" : "General" }}</span>
-              <div class="record-actions">
-                <button type="button" (click)="openEdit(record)" aria-label="Editar">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                </button>
-                <button type="button" class="danger" (click)="remove(record)" aria-label="Eliminar">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
-                </button>
-              </div>
-            </div>
-          </article>
-        }
-      </div>
+      @for (group of groupedCategories(); track group.kind) {
+        <section class="kind_group">
+          <h2 class="kind_heading">{{ group.label }}</h2>
+
+          <div class="category_list">
+            @for (cat of group.items; track cat.id) {
+              <article class="category_card">
+                <div class="category_row" (click)="toggleCategory(cat.id)">
+                  <span class="record_swatch" [style.background]="cat.color || 'var(--color_accent_soft)'">{{ cat.icon || "✦" }}</span>
+                  <div class="record_body">
+                    <p class="record_name">{{ cat.name }}</p>
+                    <p class="record_sub">{{ cat.description || "Sin descripción" }}</p>
+                  </div>
+                  <div class="category_right">
+                    <span class="type_count">{{ cat.types.length }} tipo{{ cat.types.length !== 1 ? 's' : '' }}</span>
+                    <div class="record_actions">
+                      <button type="button" (click)="$event.stopPropagation(); openEditCategory(cat)" aria-label="Editar categoría">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                      </button>
+                      <button type="button" class="danger" (click)="$event.stopPropagation(); removeCategory(cat)" aria-label="Eliminar categoría">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <svg class="chevron" [class.open]="cat.expanded" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6" /></svg>
+                </div>
+
+                @if (cat.expanded) {
+                  <div class="types_section">
+                    <div class="types_header">
+                      <span class="types_label">Tipos</span>
+                      <button type="button" class="btn_add_type" (click)="openCreateType(cat)">+ Agregar tipo</button>
+                    </div>
+
+                    @if (cat.types.length === 0) {
+                      <p class="types_empty">Sin tipos configurados</p>
+                    } @else {
+                      <div class="types_list">
+                        @for (type of cat.types; track type.id) {
+                          <div class="type_row">
+                            <span class="record_swatch small" [style.background]="type.color || 'var(--color_accent_soft)'">{{ type.icon || "•" }}</span>
+                            <span class="record_name small">{{ type.name }}</span>
+                            <div class="record_actions inline">
+                              <button type="button" (click)="openEditType(type)" aria-label="Editar tipo">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                              </button>
+                              <button type="button" class="danger" (click)="removeType(type)" aria-label="Eliminar tipo">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                              </button>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </section>
+      }
     }
   </main>
 </div>

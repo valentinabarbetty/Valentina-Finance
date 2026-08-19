@@ -87,6 +87,7 @@ model User {
   name                String
   currency            String   @default("COP") // ISO 4217; preparado para multi-moneda futura
   monthlyIncomeApprox Decimal? @db.Decimal(14, 2)
+  initialBalance      Decimal  @default(0) @db.Decimal(14, 2)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -113,25 +114,28 @@ model User {
 // -----------------------------------------------------------------------------
 
 model TransactionType {
-  id        String           @id @default(uuid()) @db.Uuid
-  userId    String           @db.Uuid
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kind      TransactionKind
-  name      String // "Necesidad", "Deseo", "Salario", "Bonificación"...
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @db.Uuid
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String           @db.Uuid
+  category    Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  kind        TransactionKind
+  name        String
   description String?
-  icon      String?
-  color     String?
-  isActive  Boolean          @default(true)
-  isSystem  Boolean          @default(false) // true = venía del set inicial sugerido; sigue siendo editable
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  deletedAt DateTime?
+  icon        String?
+  color       String?
+  isActive    Boolean          @default(true)
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
 
   expenses Expense[]
   incomes  Income[]
 
-  @@unique([userId, kind, name])
+  @@unique([userId, categoryId, name])
   @@index([userId])
+  @@index([categoryId])
   @@map("transaction_types")
 }
 
@@ -157,6 +161,7 @@ model Category {
   expenses          Expense[]
   incomes           Income[]
   budgets           Budget[]
+  transactionTypes  TransactionType[]
   recurringExpenses RecurringExpense[]
 
   @@unique([userId, name])
@@ -274,8 +279,8 @@ model Income {
   id          String           @id @default(uuid()) @db.Uuid
   userId      String           @db.Uuid
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  categoryId  String?          @db.Uuid
-  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId  String           @db.Uuid
+  category    Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   typeId      String?          @db.Uuid // TransactionType con kind=INCOME
   type        TransactionType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
   amount      Decimal          @db.Decimal(14, 2)
@@ -302,18 +307,16 @@ model Budget {
   category      Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   goalId        String?   @db.Uuid
   goal          Goal?     @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  month         Int // 1-12
-  year          Int
+  isRecurring   Boolean   @default(false)
+  month         Int?
+  year          Int?
   plannedAmount Decimal   @db.Decimal(14, 2)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
 
-  // NOTA: Postgres no aplica unicidad entre filas con NULL en columnas nullable
-  // (categoryId/goalId), así que este @@unique no evita duplicados cuando
-  // ambos son NULL. Ver esquema-diseno-notas.md para el índice parcial
-  // recomendado a nivel de migración SQL.
-  @@unique([userId, categoryId, goalId, month, year])
+  // XOR constraint enforced via CHECK constraint + BudgetService validation.
+  // Partial unique indexes (with deletedAt IS NULL) enforce uniqueness per target.
   @@index([userId, year, month])
   @@map("budgets")
 }

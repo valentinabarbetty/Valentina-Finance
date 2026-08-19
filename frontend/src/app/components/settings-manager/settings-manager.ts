@@ -1,18 +1,30 @@
-import { Component, Input, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { forkJoin } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { CategoryService } from '../../services/category.service';
 import { TransactionTypeService } from '../../services/transaction-type.service';
-import { Category, CategoryKind, CategoryPayload, TransactionKind, TransactionType, TransactionTypePayload } from '../../models/financial-settings.models';
-import { BottomNavComponent } from '../../components/bottom-nav/bottom-nav';
+import { Category, CategoryKind, CategoryPayload, TransactionType, TransactionTypePayload } from '../../models/financial-settings.models';
+import { BottomNavComponent } from '../bottom-nav/bottom-nav';
 
-type ManagedRecord = Category | TransactionType;
-type ManagerKind = 'categories' | 'transaction-types';
+interface CategoryWithType extends Category {
+  types: TransactionType[];
+  typesLoading: boolean;
+  expanded: boolean;
+}
 
 interface Toast {
   message: string;
   type: 'success' | 'error';
 }
+
+type EditorMode = 'category-create' | 'category-edit' | 'type-create' | 'type-edit';
+
+const KIND_LABELS: Record<CategoryKind, string> = {
+  EXPENSE: 'Gastos',
+  INCOME: 'Ingresos',
+  GENERAL: 'General',
+};
 
 @Component({
   selector: 'app-settings-manager',
@@ -21,85 +33,214 @@ interface Toast {
   styleUrl: './settings-manager.scss',
 })
 export class SettingsManagerComponent implements OnInit {
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly categories = inject(CategoryService);
-  private readonly transactionTypes = inject(TransactionTypeService);
+  private readonly fb = inject(FormBuilder);
+  private readonly categoryService = inject(CategoryService);
+  private readonly typeService = inject(TransactionTypeService);
 
-  @Input({ required: true }) manager!: ManagerKind;
-
-  readonly records = signal<ManagedRecord[]>([]);
+  readonly categories = signal<CategoryWithType[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly formError = signal<string | null>(null);
   readonly toast = signal<Toast | null>(null);
   private toastTimer?: ReturnType<typeof setTimeout>;
 
+  readonly editorMode = signal<EditorMode | null>(null);
   readonly editingId = signal<string | null>(null);
-  readonly formVisible = signal(false);
-  readonly isTransactionType = computed(() => this.manager === 'transaction-types');
-  readonly title = computed(() => this.isTransactionType() ? 'Tipos de transacción' : 'Categorías');
-  readonly singular = computed(() => this.isTransactionType() ? 'tipo de transacción' : 'categoría');
-  readonly form = this.formBuilder.nonNullable.group({
+  readonly parentCategoryId = signal<string | null>(null);
+
+  readonly isCategoryEditor = computed(() => {
+    const mode = this.editorMode();
+    return mode === 'category-create' || mode === 'category-edit';
+  });
+
+  readonly editorTitle = computed(() => {
+    const mode = this.editorMode();
+    if (mode === 'category-create') return 'Crear categoría';
+    if (mode === 'category-edit') return 'Editar categoría';
+    if (mode === 'type-create') return 'Crear tipo de transacción';
+    if (mode === 'type-edit') return 'Editar tipo de transacción';
+    return '';
+  });
+
+  readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],
     description: ['', Validators.maxLength(500)],
     icon: ['', Validators.maxLength(100)],
     color: ['', Validators.maxLength(32)],
-    kind: ['GENERAL'],
+    kind: ['GENERAL' as CategoryKind],
   });
 
-  ngOnInit(): void { this.load(); }
+  readonly groupedCategories = computed(() => {
+    const cats = this.categories();
+    const groups: { kind: CategoryKind; label: string; items: CategoryWithType[] }[] = [];
+    for (const kind of ['EXPENSE', 'INCOME', 'GENERAL'] as CategoryKind[]) {
+      const items = cats.filter(c => c.kind === kind);
+      if (items.length > 0) {
+        groups.push({ kind, label: KIND_LABELS[kind], items });
+      }
+    }
+    return groups;
+  });
+
+  ngOnInit(): void {
+    this.load();
+  }
 
   load(): void {
     this.loading.set(true);
-    const request = this.isTransactionType() ? this.transactionTypes.list() : this.categories.list();
-    request.pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: (records) => this.records.set(records),
-      error: (error) => this.showToast(error.error?.error ?? 'No fue posible cargar los datos.', 'error'),
+    this.categoryService.list().pipe(
+      switchMap(cats => {
+        if (cats.length === 0) return [];
+        const calls = cats.map(cat =>
+          this.typeService.list(cat.id).pipe(
+            switchMap(types => [this.buildCategoryWithType(cat, types)]),
+          ),
+        );
+        return forkJoin(calls);
+      }),
+      finalize(() => this.loading.set(false)),
+    ).subscribe({
+      next: (result) => {
+        this.categories.set(result);
+      },
+      error: (err) => this.showToast(err.error?.error ?? 'No fue posible cargar los datos.', 'error'),
     });
   }
 
-  openCreate(): void {
+  private buildCategoryWithType(cat: Category, types: TransactionType[]): CategoryWithType {
+    return { ...cat, types, typesLoading: false, expanded: false };
+  }
+
+  toggleCategory(catId: string): void {
+    this.categories.update(cats => cats.map(c => c.id === catId ? { ...c, expanded: !c.expanded } : c));
+  }
+
+  openCreateCategory(): void {
     this.editingId.set(null);
-    this.form.reset({ name: '', description: '', icon: '', color: '', kind: this.isTransactionType() ? 'EXPENSE' : 'GENERAL' });
+    this.parentCategoryId.set(null);
+    this.editorMode.set('category-create');
+    this.form.reset({ name: '', description: '', icon: '', color: '', kind: 'GENERAL' });
     this.formError.set(null);
-    this.formVisible.set(true);
   }
 
-  openEdit(record: ManagedRecord): void {
-    this.editingId.set(record.id);
-    this.form.reset({ name: record.name, description: record.description ?? '', icon: record.icon ?? '', color: record.color ?? '', kind: record.kind });
+  openEditCategory(category: CategoryWithType): void {
+    this.editingId.set(category.id);
+    this.parentCategoryId.set(null);
+    this.editorMode.set('category-edit');
+    this.form.reset({ name: category.name, description: category.description ?? '', icon: category.icon ?? '', color: category.color ?? '', kind: category.kind });
     this.formError.set(null);
-    this.formVisible.set(true);
   }
 
-  cancel(): void { this.formVisible.set(false); this.form.reset(); }
+  openCreateType(category: CategoryWithType): void {
+    this.editingId.set(null);
+    this.parentCategoryId.set(category.id);
+    this.editorMode.set('type-create');
+    this.form.reset({ name: '', description: '', icon: '', color: '', kind: category.kind });
+    this.formError.set(null);
+  }
+
+  openEditType(type: TransactionType): void {
+    this.editingId.set(type.id);
+    this.parentCategoryId.set(type.categoryId);
+    this.editorMode.set('type-edit');
+    this.form.reset({ name: type.name, description: type.description ?? '', icon: type.icon ?? '', color: type.color ?? '', kind: type.kind });
+    this.formError.set(null);
+  }
+
+  cancel(): void {
+    this.editorMode.set(null);
+    this.editingId.set(null);
+    this.parentCategoryId.set(null);
+    this.form.reset();
+  }
 
   save(): void {
-    if (this.form.invalid || this.saving()) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid || this.saving()) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.saving.set(true);
     this.formError.set(null);
-    const payload = this.payload();
-    const id = this.editingId();
-    const request = this.isTransactionType()
-      ? (id ? this.transactionTypes.update(id, payload as Partial<TransactionTypePayload>) : this.transactionTypes.create(payload as TransactionTypePayload))
-      : (id ? this.categories.update(id, payload as Partial<CategoryPayload>) : this.categories.create(payload as CategoryPayload));
 
-    request.pipe(finalize(() => this.saving.set(false))).subscribe({
+    const mode = this.editorMode()!;
+    const id = this.editingId();
+    const value = this.form.getRawValue();
+    const optional = (text: string): string | null => text.trim() || null;
+    const name = value.name.trim();
+
+    if (mode === 'category-create' || mode === 'category-edit') {
+      const payload: CategoryPayload = {
+        name,
+        description: optional(value.description),
+        icon: optional(value.icon),
+        color: optional(value.color),
+        kind: value.kind as CategoryKind,
+      };
+
+      const request = id
+        ? this.categoryService.update(id, payload)
+        : this.categoryService.create(payload);
+
+      request.pipe(finalize(() => this.saving.set(false))).subscribe({
+        next: () => {
+          this.showToast(id ? 'Categoría actualizada.' : 'Categoría creada.', 'success');
+          this.cancel();
+          this.load();
+        },
+        error: (err) => this.formError.set(err.error?.error ?? 'No fue posible guardar la categoría.'),
+      });
+    } else {
+      const catId = this.parentCategoryId()!;
+      const category = this.categories().find(c => c.id === catId);
+      const payload: TransactionTypePayload = {
+        name,
+        description: optional(value.description),
+        icon: optional(value.icon),
+        color: optional(value.color),
+        kind: (category?.kind ?? value.kind) as 'INCOME' | 'EXPENSE',
+        categoryId: catId,
+      };
+
+      const request = id
+        ? this.typeService.update(id, { name: payload.name, description: payload.description, icon: payload.icon, color: payload.color })
+        : this.typeService.create(payload);
+
+      request.pipe(finalize(() => this.saving.set(false))).subscribe({
+        next: () => {
+          this.showToast(id ? 'Tipo actualizado.' : 'Tipo creado.', 'success');
+          this.cancel();
+          this.load();
+        },
+        error: (err) => this.formError.set(err.error?.error ?? 'No fue posible guardar el tipo de transacción.'),
+      });
+    }
+  }
+
+  removeCategory(category: CategoryWithType): void {
+    const hasTypes = category.types.length > 0;
+    const msg = hasTypes
+      ? `La categoría "${category.name}" tiene ${category.types.length} tipo(s). ¿Eliminar la categoría y todos sus tipos?`
+      : `¿Eliminar la categoría "${category.name}"?`;
+    if (!window.confirm(msg)) return;
+
+    this.categoryService.remove(category.id).subscribe({
       next: () => {
-        this.showToast(id ? 'Cambios guardados correctamente.' : `Nueva ${this.singular()} creada correctamente.`, 'success');
-        this.formVisible.set(false);
+        this.showToast('Categoría eliminada.', 'success');
         this.load();
       },
-      error: (error) => this.formError.set(error.error?.error ?? 'No fue posible guardar los cambios.'),
+      error: (err) => this.showToast(err.error?.error ?? 'No fue posible eliminar la categoría.', 'error'),
     });
   }
 
-  remove(record: ManagedRecord): void {
-    if (!window.confirm(`¿Eliminar ${this.singular()} “${record.name}”?`)) return;
-    const request = this.isTransactionType() ? this.transactionTypes.remove(record.id) : this.categories.remove(record.id);
-    request.subscribe({
-      next: () => { this.showToast(`${this.singular().replace(/^./, (letter) => letter.toUpperCase())} eliminada correctamente.`, 'success'); this.load(); },
-      error: (error) => this.showToast(error.error?.error ?? 'No fue posible eliminar el registro.', 'error'),
+  removeType(type: TransactionType): void {
+    if (!window.confirm(`¿Eliminar el tipo "${type.name}"?`)) return;
+
+    this.typeService.remove(type.id).subscribe({
+      next: () => {
+        this.showToast('Tipo eliminado.', 'success');
+        this.load();
+      },
+      error: (err) => this.showToast(err.error?.error ?? 'No fue posible eliminar el tipo.', 'error'),
     });
   }
 
@@ -107,14 +248,5 @@ export class SettingsManagerComponent implements OnInit {
     clearTimeout(this.toastTimer);
     this.toast.set({ message, type });
     this.toastTimer = setTimeout(() => this.toast.set(null), 3200);
-  }
-
-  private payload(): CategoryPayload | TransactionTypePayload {
-    const value = this.form.getRawValue();
-    const optional = (text: string): string | null => text.trim() || null;
-    const common = { name: value.name.trim(), description: optional(value.description), icon: optional(value.icon), color: optional(value.color) };
-    return this.isTransactionType()
-      ? { ...common, kind: value.kind as TransactionKind }
-      : { ...common, kind: value.kind as CategoryKind };
   }
 }

@@ -29,9 +29,15 @@ export class TransactionsManagerComponent implements OnInit {
   private readonly builder = inject(FormBuilder); private readonly categoriesApi = inject(CategoryService); private readonly typesApi = inject(TransactionTypeService); private readonly expenses = inject(ExpenseService); private readonly incomes = inject(IncomeService);
   @Input({ required: true }) kind!: 'expenses' | 'incomes';
 
-  readonly records = signal<FinancialTransaction[]>([]); readonly categories = signal<Category[]>([]); readonly types = signal<TransactionType[]>([]);
+  readonly records = signal<FinancialTransaction[]>([]); readonly categories = signal<Category[]>([]);
+  readonly formTypes = signal<TransactionType[]>([]); readonly filterTypes = signal<TransactionType[]>([]);
   readonly loading = signal(true); readonly saving = signal(false); readonly formError = signal<string | null>(null); readonly editingId = signal<string | null>(null); readonly formVisible = signal(false);
   readonly isExpense = computed(() => this.kind === 'expenses'); readonly title = computed(() => this.isExpense() ? 'Gastos' : 'Ingresos'); readonly singular = computed(() => this.isExpense() ? 'gasto' : 'ingreso');
+
+  readonly filteredCategories = computed(() => {
+    const kind = this.isExpense() ? 'EXPENSE' : 'INCOME';
+    return this.categories().filter(c => c.kind === kind);
+  });
 
   readonly selectedMonth = signal(new Date().getMonth() + 1);
   readonly selectedYear = signal(new Date().getFullYear());
@@ -62,7 +68,8 @@ export class TransactionsManagerComponent implements OnInit {
 
   loadOptions(): void {
     this.categoriesApi.list().subscribe({ next: (items) => this.categories.set(items), error: () => this.showToast('No fue posible cargar categorías.', 'error') });
-    this.typesApi.list().subscribe({ next: (items) => this.types.set(items), error: () => this.showToast('No fue posible cargar tipos de transacción.', 'error') });
+    const kind = this.isExpense() ? 'EXPENSE' : 'INCOME';
+    this.typesApi.list().subscribe({ next: (items) => this.filterTypes.set(items.filter(t => t.kind === kind)), error: () => this.showToast('No fue posible cargar tipos de transacción.', 'error') });
   }
 
   load(): void {
@@ -86,9 +93,54 @@ export class TransactionsManagerComponent implements OnInit {
     this.selectedMonth.set(month); this.selectedYear.set(year); this.load();
   }
 
-  openCreate(): void { this.editingId.set(null); this.form.reset({ amount: '', date: new Date().toISOString().slice(0, 10), description: '', notes: '', categoryId: '', typeId: '' }); this.formVisible.set(true); this.formError.set(null); }
-  openEdit(record: FinancialTransaction): void { this.editingId.set(record.id); this.form.reset({ amount: record.amount, date: record.date, description: record.description ?? '', notes: record.notes ?? '', categoryId: record.category?.id ?? '', typeId: record.type?.id ?? '' }); this.formVisible.set(true); this.formError.set(null); }
+  openCreate(): void { this.editingId.set(null); this.form.reset({ amount: '', date: new Date().toISOString().slice(0, 10), description: '', notes: '', categoryId: '', typeId: '' }); this.formTypes.set([]); this.formVisible.set(true); this.formError.set(null); }
+  openEdit(record: FinancialTransaction): void {
+    this.editingId.set(record.id);
+    const categoryId = record.category?.id ?? '';
+    const typeId = record.type?.id ?? '';
+    this.form.reset({ amount: record.amount, date: record.date, description: record.description ?? '', notes: record.notes ?? '', categoryId: categoryId, typeId: '' });
+    this.formVisible.set(true); this.formError.set(null);
+    if (categoryId) {
+      this.loadFormTypes(categoryId, () => { this.form.controls.typeId.setValue(typeId); });
+    }
+  }
   cancel(): void { this.formVisible.set(false); }
+
+  onFormCategoryChange(): void {
+    const categoryId = this.form.controls.categoryId.value ?? '';
+    this.form.controls.typeId.setValue('');
+    this.loadFormTypes(categoryId);
+  }
+
+  onFilterCategoryChange(): void {
+    const categoryId = this.filters.controls.categoryId.value ?? '';
+    this.filters.controls.transactionTypeId.setValue('');
+    this.loadFilterTypes(categoryId);
+    this.load();
+  }
+
+  loadFormTypes(categoryId: string, afterLoad?: () => void): void {
+    if (!categoryId) { this.formTypes.set([]); afterLoad?.(); return; }
+    this.typesApi.list(categoryId).subscribe({
+      next: (items) => { this.formTypes.set(items); afterLoad?.(); },
+      error: () => { this.formTypes.set([]); afterLoad?.(); },
+    });
+  }
+
+  loadFilterTypes(categoryId: string): void {
+    if (!categoryId) {
+      const kind = this.isExpense() ? 'EXPENSE' : 'INCOME';
+      this.typesApi.list().subscribe({
+        next: (items) => this.filterTypes.set(items.filter(t => t.kind === kind)),
+        error: () => this.filterTypes.set([]),
+      });
+      return;
+    }
+    this.typesApi.list(categoryId).subscribe({
+      next: (items) => this.filterTypes.set(items),
+      error: () => this.filterTypes.set([]),
+    });
+  }
 
   save(): void {
     if (this.form.invalid || (this.isExpense() && !this.form.controls.categoryId.value) || this.saving()) { this.form.markAllAsTouched(); return; }

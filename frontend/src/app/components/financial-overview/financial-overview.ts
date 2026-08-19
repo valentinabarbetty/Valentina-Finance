@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { MoneyPipe } from '../../pipes/money.pipe';
-import { GlobalStats } from '../../models/dashboard.models';
 
 @Component({
   selector: 'app-financial-overview',
@@ -9,5 +8,6 @@ import { GlobalStats } from '../../models/dashboard.models';
   styleUrl: './financial-overview.scss',
 })
 export class FinancialOverviewComponent {
-  @Input({ required: true }) stats!: GlobalStats;
+  @Input({ required: true }) currentBalance!: string;
+  @Input({ required: true }) totalSavings!: string;
 }

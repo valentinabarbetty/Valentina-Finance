@@ -7,12 +7,14 @@ import { HomePage } from './pages/home-page/home-page';
 import { IncomesPage } from './pages/incomes-page/incomes-page';
 import { GoalsPage } from './pages/goals-page/goals-page';
 import { TransactionTypesPage } from './pages/transaction-types-page/transaction-types-page';
+import { BudgetsPage } from './pages/budgets-page/budgets-page';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'app' },
   { path: 'login', component: AuthPage, canActivate: [guestGuard], data: { mode: 'login' } },
   { path: 'register', component: AuthPage, canActivate: [guestGuard], data: { mode: 'register' } },
   { path: 'app', component: HomePage, canActivate: [authGuard] },
+  { path: 'app/budgets', component: BudgetsPage, canActivate: [authGuard] },
   { path: 'app/categories', component: CategoriesPage, canActivate: [authGuard] },
   { path: 'app/expenses', component: ExpensesPage, canActivate: [authGuard] },
   { path: 'app/incomes', component: IncomesPage, canActivate: [authGuard] },

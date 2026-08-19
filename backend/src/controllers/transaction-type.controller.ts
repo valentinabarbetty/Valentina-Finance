@@ -10,8 +10,9 @@ export const transactionTypeController = {
     const record = await transactionTypeService.create(authenticatedUserId(response), transactionTypeCreateSchema.parse(request.body));
     response.status(201).json(record);
   },
-  async list(_request: Request, response: Response): Promise<void> {
-    response.json(await transactionTypeService.list(authenticatedUserId(response)));
+  async list(request: Request, response: Response): Promise<void> {
+    const categoryId = request.query.categoryId as string | undefined;
+    response.json(await transactionTypeService.list(authenticatedUserId(response), categoryId));
   },
   async getById(request: Request, response: Response): Promise<void> {
     const { id } = idParamSchema.parse(request.params);

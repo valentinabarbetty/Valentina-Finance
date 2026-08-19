@@ -11,10 +11,9 @@ type Filters = z.infer<typeof transactionFilterSchema>;
 
 export class IncomeService {
   async create(userId: string, input: CreateInput) {
-    if (input.categoryId) await assertCategory(userId, input.categoryId, "INCOME");
-    if (input.typeId) await assertTransactionType(userId, input.typeId, "INCOME");
-    const data: Prisma.IncomeUncheckedCreateInput = { userId, amount: parseMoney(input.amount), date: parseDate(input.date) };
-    if (input.categoryId !== undefined) data.categoryId = input.categoryId;
+    await assertCategory(userId, input.categoryId, "INCOME");
+    if (input.typeId) await assertTransactionType(userId, input.typeId, "INCOME", input.categoryId);
+    const data: Prisma.IncomeUncheckedCreateInput = { userId, categoryId: input.categoryId, amount: parseMoney(input.amount), date: parseDate(input.date) };
     if (input.typeId !== undefined) data.typeId = input.typeId;
     if (input.description !== undefined) data.description = input.description;
     if (input.notes !== undefined) data.notes = input.notes;
@@ -43,10 +42,10 @@ export class IncomeService {
 
   async update(userId: string, id: string, input: UpdateInput) {
     const income = await this.getById(userId, id);
-    const categoryId = input.categoryId === undefined ? income.categoryId : input.categoryId;
+    const categoryId = input.categoryId ?? income.categoryId;
     const typeId = input.typeId === undefined ? income.typeId : input.typeId;
-    if (categoryId) await assertCategory(userId, categoryId, "INCOME");
-    if (typeId) await assertTransactionType(userId, typeId, "INCOME");
+    await assertCategory(userId, categoryId, "INCOME");
+    if (typeId) await assertTransactionType(userId, typeId, "INCOME", categoryId);
     const data: Prisma.IncomeUncheckedUpdateInput = {};
     if (input.amount !== undefined) data.amount = parseMoney(input.amount);
     if (input.date !== undefined) data.date = parseDate(input.date);

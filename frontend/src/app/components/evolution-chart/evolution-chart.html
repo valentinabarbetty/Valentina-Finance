@@ -1,14 +1,16 @@
 @if (hasMovement()) {
-  <div class="chart-bars" aria-hidden="true">
-    @for (bar of bars(); track bar.label + $index) {
-      <div class="chart-column">
-        <div class="chart-bar-pair">
-          <span class="chart-bar income" [style.height.px]="bar.incomeHeight"></span>
-          <span class="chart-bar expense" [style.height.px]="bar.expenseHeight"></span>
+  <div class="chart-wrapper">
+    <div class="chart-bars" aria-hidden="true">
+      @for (bar of bars(); track bar.label + $index) {
+        <div class="chart-column">
+          <div class="chart-bar-pair">
+            <span class="chart-bar income" [style.height.px]="bar.incomeHeight"></span>
+            <span class="chart-bar expense" [style.height.px]="bar.expenseHeight"></span>
+          </div>
+          <span class="chart-month">{{ bar.label }}</span>
         </div>
-        <span class="chart-month">{{ bar.label }}</span>
-      </div>
-    }
+      }
+    </div>
   </div>
 
   <div class="chart-legend" aria-hidden="true">

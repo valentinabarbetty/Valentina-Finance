@@ -32,7 +32,7 @@ export const incomeCreateSchema = z.object({
   date: isoDate,
   description: optionalText,
   notes: optionalText,
-  categoryId: optionalId,
+  categoryId: z.string().uuid(),
   typeId: optionalId,
 }).strict();
 

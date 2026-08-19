@@ -16,18 +16,21 @@ export function serializeTransaction<T extends { amount: Prisma.Decimal; date: D
 
 export async function assertCategory(userId: string, categoryId: string, kind: TransactionKind): Promise<void> {
   const category = await prisma.category.findFirst({
-    where: { id: categoryId, userId, deletedAt: null, kind: { in: ["GENERAL", kind] } },
+    where: { id: categoryId, userId, deletedAt: null, kind },
     select: { id: true },
   });
-  if (!category) throw new AppError(400, "Category must be active, owned by you, and compatible with this transaction");
+  if (!category) throw new AppError(400, "Category must be active, owned by you, and match the transaction kind (INCOME/EXPENSE)");
 }
 
-export async function assertTransactionType(userId: string, typeId: string, kind: TransactionKind): Promise<void> {
+export async function assertTransactionType(userId: string, typeId: string, kind: TransactionKind, categoryId?: string): Promise<void> {
   const type = await prisma.transactionType.findFirst({
     where: { id: typeId, userId, deletedAt: null, kind },
-    select: { id: true },
+    select: { id: true, categoryId: true },
   });
   if (!type) throw new AppError(400, "Transaction type must be active, owned by you, and compatible with this transaction");
+  if (categoryId && type.categoryId !== categoryId) {
+    throw new AppError(400, "Transaction type must belong to the same category as the transaction");
+  }
 }
 
 export function dateFilter(month?: number, year?: number): Prisma.DateTimeFilter | undefined {

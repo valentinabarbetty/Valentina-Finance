@@ -1,0 +1,36 @@
+/* =============================================================================
+   Month Comparison — comparativa vs mes anterior
+   ============================================================================= */
+
+.comparison-rows {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.comparison-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.comparison-row:last-child { border-bottom: none; }
+
+.comparison-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.comparison-diff {
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.comparison-diff.positive { color: var(--color-success); }
+.comparison-diff.negative { color: var(--color-error); }
+.comparison-diff.neutral  { color: var(--color-text-muted); }

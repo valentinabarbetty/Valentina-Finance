@@ -19,23 +19,23 @@
       </button>
     </div>
 
-    <form class="filters-row" [formGroup]="filters" (ngSubmit)="load()">
-      <div class="filters-selects">
-        <select formControlName="categoryId" (change)="load()">
+    <div class="toolbar">
+      <div class="filter-selects" [formGroup]="filters">
+        <select formControlName="categoryId" (change)="onFilterCategoryChange()">
           <option value="">Todas las categorías</option>
-          @for (category of categories(); track category.id) {
+          @for (category of filteredCategories(); track category.id) {
             <option [value]="category.id">{{ category.name }}</option>
           }
         </select>
         <select formControlName="transactionTypeId" (change)="load()">
           <option value="">Todos los tipos</option>
-          @for (type of types(); track type.id) {
+          @for (type of filterTypes(); track type.id) {
             <option [value]="type.id">{{ type.name }}</option>
           }
         </select>
       </div>
       <button class="btn-primary" type="button" (click)="openCreate()">+ Nuevo {{ singular() }}</button>
-    </form>
+    </div>
 
     @if (formVisible()) {
       <div class="editor-backdrop" (click)="cancel()"></div>
@@ -61,9 +61,9 @@
 
         <label>
           Categoría @if (!isExpense()) { <small>(opcional)</small> }
-          <select formControlName="categoryId">
+          <select formControlName="categoryId" (change)="onFormCategoryChange()">
             <option value="">{{ isExpense() ? "Selecciona una categoría" : "Sin categoría" }}</option>
-            @for (category of categories(); track category.id) {
+            @for (category of filteredCategories(); track category.id) {
               <option [value]="category.id">{{ category.name }}</option>
             }
           </select>
@@ -71,9 +71,9 @@
 
         <label>
           Tipo <small>(opcional)</small>
-          <select formControlName="typeId">
-            <option value="">Sin tipo</option>
-            @for (type of types(); track type.id) {
+          <select formControlName="typeId" [disabled]="!form.controls.categoryId.value">
+            <option value="">{{ form.controls.categoryId.value ? "Sin tipo" : "Selecciona una categoría primero" }}</option>
+            @for (type of formTypes(); track type.id) {
               <option [value]="type.id">{{ type.name }}</option>
             }
           </select>

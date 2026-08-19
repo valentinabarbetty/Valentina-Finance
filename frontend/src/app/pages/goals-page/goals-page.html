@@ -5,7 +5,7 @@
     <header>
       <div>
         <p class="eyebrow">Valen Finance</p>
-        <h1>Mis metas ✨</h1>
+        <h1>Mis metas</h1>
         <p class="subtitle">Convierte cada plan bonito en un ahorro posible.</p>
       </div>
       <button class="btn-primary" type="button" (click)="openGoal()">+ Nueva meta</button>
@@ -62,7 +62,7 @@
         @if (loading()) {
           <p class="state-text">Cargando metas…</p>
         } @else if (!goals().length) {
-          <div class="empty-state">Aún no tienes metas. Crea la primera 💗</div>
+          <div class="empty-state">Aún no tienes metas. Crea la primera</div>
         } @else {
           @for (goal of goals(); track goal.id) {
             <article class="goal-card" [class.selected]="selected()?.id === goal.id" (click)="open(goal.id)">

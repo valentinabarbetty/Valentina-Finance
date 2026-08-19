@@ -15,3 +15,5 @@ authRouter.get("/me", authenticate, (_request, response) => {
     email: user?.email ?? null,
   });
 });
+
+//e

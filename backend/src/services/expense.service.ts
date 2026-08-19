@@ -12,7 +12,7 @@ type Filters = z.infer<typeof transactionFilterSchema>;
 export class ExpenseService {
   async create(userId: string, input: CreateInput) {
     await assertCategory(userId, input.categoryId, "EXPENSE");
-    if (input.typeId) await assertTransactionType(userId, input.typeId, "EXPENSE");
+    if (input.typeId) await assertTransactionType(userId, input.typeId, "EXPENSE", input.categoryId);
     const data: Prisma.ExpenseUncheckedCreateInput = { userId, categoryId: input.categoryId, amount: parseMoney(input.amount), date: parseDate(input.date) };
     if (input.typeId !== undefined) data.typeId = input.typeId;
     if (input.description !== undefined) data.description = input.description;
@@ -45,7 +45,7 @@ export class ExpenseService {
     const categoryId = input.categoryId ?? expense.categoryId;
     const typeId = input.typeId === undefined ? expense.typeId : input.typeId;
     await assertCategory(userId, categoryId, "EXPENSE");
-    if (typeId) await assertTransactionType(userId, typeId, "EXPENSE");
+    if (typeId) await assertTransactionType(userId, typeId, "EXPENSE", categoryId);
     const data: Prisma.ExpenseUncheckedUpdateInput = {};
     if (input.amount !== undefined) data.amount = parseMoney(input.amount);
     if (input.date !== undefined) data.date = parseDate(input.date);

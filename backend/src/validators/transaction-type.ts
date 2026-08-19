@@ -8,6 +8,7 @@ export const transactionTypeCreateSchema = z.object({
   icon: z.string().trim().min(1).max(100).optional().nullable(),
   color: z.string().trim().min(1).max(32).optional().nullable(),
   kind: z.enum(["INCOME", "EXPENSE"]),
+  categoryId: z.string().uuid("Category is required"),
 }).strict();
 
 export const transactionTypeUpdateSchema = transactionTypeCreateSchema.partial().refine(
