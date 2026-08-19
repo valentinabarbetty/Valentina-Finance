@@ -89,11 +89,12 @@ label {
 
 .input-wrap .icon {
   position: absolute;
-  left: 0.8rem;
+  left: 0.75rem;
   width: 18px;
   height: 18px;
   color: var(--color-text-muted);
   pointer-events: none;
+  z-index: 1;
 }
 
 input {
